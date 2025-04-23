@@ -23,3 +23,16 @@ yarn-error.log*
 
 # Firebase
 .firebase/
+
+# IDE and Editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Config files with sensitive data
+/src/config/*Config.js
+/src/config/*Credentials.js
+
+# Upload directory
+/uploads/
