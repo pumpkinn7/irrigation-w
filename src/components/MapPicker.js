@@ -40,6 +40,24 @@ function MapPicker({ location, onLocationChange }) {
     }
   };
 
+  const handleSearchSubmit = (e) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    if (searchBox?.getPlaces) {
+      handlePlacesChanged();
+    }
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      e.stopPropagation();
+      handleSearchSubmit();
+    }
+  };
+
   if (!isLoaded) return <div className="text-center"><div className="spinner-border text-primary"></div></div>;
 
   const position = (location?.lat && location?.lng) ? location : defaultCenter;
@@ -48,7 +66,21 @@ function MapPicker({ location, onLocationChange }) {
     <div className="mb-3">
       <div className="mb-2">
         <StandaloneSearchBox onLoad={setSearchBox} onPlacesChanged={handlePlacesChanged}>
-          <input type="text" className="form-control" placeholder="🔍 ค้นหาสถานที่..." />
+          <div className="input-group">
+            <input 
+              type="text" 
+              className="form-control" 
+              placeholder="ค้นหาสถานที่"
+              onKeyDown={handleKeyPress}
+            />
+            <button 
+              type="button" 
+              className="btn btn-info text-white"
+              onClick={handleSearchSubmit}
+            >
+              <i className="bi bi-search"></i>
+            </button>
+          </div>
         </StandaloneSearchBox>
       </div>
       

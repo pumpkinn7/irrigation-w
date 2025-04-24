@@ -8,7 +8,6 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
 import EmailVerification from './pages/EmailVerification';
-import Test from './pages/Test';
 import ManageProjects from './pages/ManageProjects';
 import ProjectForm from './pages/ProjectForm';
 import { AuthProvider } from './contexts/AuthContext';
@@ -25,7 +24,6 @@ function App() {
             <Route path="/register" element={<Register />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/email-verification" element={<EmailVerification />} />
-            <Route path="/test" element={<Test />} />
             <Route path="/manage-projects" element={<ManageProjects />} />
             <Route path="/manage-projects/create" element={<ProjectForm />} />
             <Route path="/manage-projects/edit/:id" element={<ProjectForm />} />

@@ -80,9 +80,6 @@ function Navbar() {
               </li>
             )}
             <li className="nav-item">
-              <Link className="nav-link" to="/test">ทดสอบ</Link>
-            </li>
-            <li className="nav-item">
               <Link className="nav-link" to="/contact">ติดต่อ</Link>
             </li>
             
