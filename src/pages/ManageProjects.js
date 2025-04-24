@@ -3,35 +3,14 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { getFirestore, collection, getDocs } from 'firebase/firestore';
 import app from '../firebase';
+import { generateYearRange, getCurrentYear } from '../utils/yearUtils';
 
 function ManageProjects() {
   const { currentUser } = useAuth();
   const navigate = useNavigate();
   const [projects, setProjects] = useState([]);
-
-  // สร้างฟังก์ชันคำนวณปีงบประมาณ
-  const generateFiscalYears = () => {
-    const currentYear = new Date().getFullYear() + 543; // แปลงเป็นพ.ศ.
-    const currentMonth = new Date().getMonth() + 1; // เดือนปัจจุบัน (1-12)
-    
-    // ถ้าเดือนปัจจุบันมากกว่าหรือเท่ากับตุลาคม ให้เพิ่มปีงบประมาณถัดไป
-    const startYear = currentMonth >= 10 ? currentYear : currentYear - 1;
-    
-    // สร้างอาเรย์ปีงบประมาณย้อนหลัง 2 ปี และปีถัดไป 1 ปี
-    return [
-      (startYear - 2).toString(),
-      (startYear - 1).toString(),
-      startYear.toString(),
-      (startYear + 1).toString()
-    ];
-  };
-
-  const [selectedYear, setSelectedYear] = useState(() => {
-    const fiscalYears = generateFiscalYears();
-    return fiscalYears[2]; // เลือกปีปัจจุบันเป็นค่าเริ่มต้น
-  });
-  
-  const years = generateFiscalYears();
+  const [selectedYear, setSelectedYear] = useState(getCurrentYear());
+  const years = generateYearRange();
   const db = getFirestore(app);
 
   useEffect(() => {

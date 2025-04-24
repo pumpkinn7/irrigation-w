@@ -4,22 +4,23 @@ import { getFirestore, doc, getDoc, setDoc, addDoc, collection } from 'firebase/
 import { useAuth } from '../contexts/AuthContext';
 import app from '../firebase';
 import MapPicker from '../components/MapPicker';
+import { generateYearRange, getCurrentYear } from '../utils/yearUtils';
 
 function ProjectForm() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { currentUser } = useAuth();
-  const db = getFirestore(app); // ย้ายมาประกาศที่นี่
+  const db = getFirestore(app);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const years = ['2566', '2567', '2568'];
+  const years = generateYearRange();
   
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    year: '2567',
+    year: getCurrentYear(),
     location: {
-      lat: 16.4419, // เปลี่ยนเป็นพิกัดขอนแก่น
+      lat: 16.4419,
       lng: 102.8360,
       address: ''
     }
@@ -46,7 +47,7 @@ function ProjectForm() {
       };
       fetchProject();
     }
-  }, [id, currentUser, navigate, db, formData.year]); // เพิ่ม db และ formData.year เข้าไปใน dependencies
+  }, [id, currentUser, navigate, db, formData.year]);
 
   const handleLocationChange = (newLocation) => {
     if (newLocation && typeof newLocation.lat === 'number' && typeof newLocation.lng === 'number') {
@@ -68,14 +69,12 @@ function ProjectForm() {
 
     try {
       if (id) {
-        // อัปเดตโครงการ
         await setDoc(doc(db, formData.year, id), {
           ...formData,
           updatedAt: new Date().toISOString(),
           updatedBy: currentUser.uid
         });
       } else {
-        // สร้างโครงการใหม่
         await addDoc(collection(db, formData.year), {
           ...formData,
           createdAt: new Date().toISOString(),
