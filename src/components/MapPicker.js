@@ -1,60 +1,75 @@
-import React from 'react';
-import { GoogleMap, useJsApiLoader, Marker } from '@react-google-maps/api';
+import React, { useState } from 'react';
+import { GoogleMap, useJsApiLoader, Marker, StandaloneSearchBox } from '@react-google-maps/api';
 
-const containerStyle = {
-  width: '100%',
-  height: '400px'
-};
-
-const center = {
-  lat: 13.7563, 
-  lng: 100.5018
-};
+const mapContainerStyle = { width: '100%', height: '400px' };
+const defaultCenter = { lat: 16.4419, lng: 102.8360 }; // ขอนแก่น
+const mapOptions = { fullscreenControl: true, streetViewControl: false, mapTypeControl: true };
 
 function MapPicker({ location, onLocationChange }) {
-  const { isLoaded, loadError } = useJsApiLoader({
-    id: 'google-map-script',
+  const [mapInstance, setMapInstance] = useState(null);
+  const [searchBox, setSearchBox] = useState(null);
+  
+  const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY,
-    libraries: ['places']
+    libraries: ['places'],
+    language: 'th'
   });
-
-  const onLoad = React.useCallback(function callback(map) {
-    if (location) {
-      map.panTo(location);
-    }
-  }, [location]);
-
-  const handleClick = (e) => {
-    const lat = e.latLng.lat();
-    const lng = e.latLng.lng();
-    onLocationChange({ lat, lng });
+  
+  const handleMapClick = (e) => {
+    onLocationChange({ 
+      lat: e.latLng.lat(), 
+      lng: e.latLng.lng()
+    });
   };
 
-  if (loadError) {
-    return (
-      <div className="alert alert-danger">
-        Error loading maps: {loadError.message}
-      </div>
-    );
-  }
+  const handlePlacesChanged = () => {
+    const places = searchBox?.getPlaces();
+    if (places?.[0]?.geometry?.location) {
+      const newPos = {
+        lat: places[0].geometry.location.lat(),
+        lng: places[0].geometry.location.lng()
+      };
+      
+      onLocationChange(newPos);
+      
+      // แก้ไขการใช้ optional chaining ที่ทำให้เกิด ESLint error
+      if (mapInstance) {
+        mapInstance.panTo(newPos);
+        mapInstance.setZoom(15);
+      }
+    }
+  };
 
-  if (!isLoaded) {
-    return <div>Loading maps...</div>;
-  }
+  if (!isLoaded) return <div className="text-center"><div className="spinner-border text-primary"></div></div>;
+
+  const position = (location?.lat && location?.lng) ? location : defaultCenter;
 
   return (
     <div className="mb-3">
-      <GoogleMap
-        mapContainerStyle={containerStyle}
-        center={location || center}
-        zoom={10}
-        onLoad={onLoad}
-        onClick={handleClick}
-      >
-        {location && <Marker position={location} />}
-      </GoogleMap>
+      <div className="mb-2">
+        <StandaloneSearchBox onLoad={setSearchBox} onPlacesChanged={handlePlacesChanged}>
+          <input type="text" className="form-control" placeholder="🔍 ค้นหาสถานที่..." />
+        </StandaloneSearchBox>
+      </div>
+      
+      <div className="border rounded">
+        <GoogleMap
+          mapContainerStyle={mapContainerStyle}
+          center={position}
+          zoom={13}
+          onClick={handleMapClick}
+          onLoad={setMapInstance}
+          options={mapOptions}
+        >
+          <Marker position={position} key={`${position.lat}-${position.lng}`} />
+        </GoogleMap>
+      </div>
+      
+      <div className="mt-2 small">
+        <strong>พิกัดที่เลือก:</strong> {position.lat.toFixed(6)}, {position.lng.toFixed(6)}
+      </div>
     </div>
   );
 }
 
-export default React.memo(MapPicker);
+export default MapPicker;

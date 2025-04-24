@@ -19,8 +19,8 @@ function ProjectForm() {
     description: '',
     year: '2567',
     location: {
-      lat: 13.7563,
-      lng: 100.5018,
+      lat: 16.4419, // เปลี่ยนเป็นพิกัดขอนแก่น
+      lng: 102.8360,
       address: ''
     }
   });
@@ -49,14 +49,16 @@ function ProjectForm() {
   }, [id, currentUser, navigate, db, formData.year]); // เพิ่ม db และ formData.year เข้าไปใน dependencies
 
   const handleLocationChange = (newLocation) => {
-    setFormData(prev => ({
-      ...prev,
-      location: {
-        ...prev.location,
-        lat: newLocation.lat,
-        lng: newLocation.lng
-      }
-    }));
+    if (newLocation && typeof newLocation.lat === 'number' && typeof newLocation.lng === 'number') {
+      setFormData(prev => ({
+        ...prev,
+        location: {
+          ...prev.location,
+          lat: newLocation.lat,
+          lng: newLocation.lng
+        }
+      }));
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -141,59 +143,25 @@ function ProjectForm() {
                   />
                 </div>
 
-                <div className="mb-3">
-                  <label className="form-label">เลือกพิกัดบนแผนที่</label>
+                <div className="mb-4">
+                  <label className="form-label fw-bold">เลือกพิกัดบนแผนที่</label>
                   <MapPicker
-                    location={{
-                      lat: formData.location.lat,
-                      lng: formData.location.lng
-                    }}
+                    location={formData.location}
                     onLocationChange={handleLocationChange}
                   />
                 </div>
 
                 <div className="mb-3">
-                  <label className="form-label">พิกัด (คลิกบนแผนที่เพื่อเลือก)</label>
-                  <div className="row">
-                    <div className="col">
-                      <input
-                        type="number"
-                        className="form-control"
-                        placeholder="ละติจูด"
-                        value={formData.location.lat}
-                        onChange={(e) => setFormData({
-                          ...formData,
-                          location: {...formData.location, lat: parseFloat(e.target.value)}
-                        })}
-                        required
-                      />
-                    </div>
-                    <div className="col">
-                      <input
-                        type="number"
-                        className="form-control"
-                        placeholder="ลองจิจูด"
-                        value={formData.location.lng}
-                        onChange={(e) => setFormData({
-                          ...formData,
-                          location: {...formData.location, lng: parseFloat(e.target.value)}
-                        })}
-                        required
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mb-3">
-                  <label className="form-label">ที่อยู่</label>
+                  <label className="form-label">ที่อยู่ตำแหน่ง</label>
                   <input
                     type="text"
                     className="form-control"
-                    value={formData.location.address}
+                    value={formData.location.address || ''}
                     onChange={(e) => setFormData({
                       ...formData,
                       location: {...formData.location, address: e.target.value}
                     })}
+                    placeholder="ระบุรายละเอียดที่อยู่หรือตำแหน่ง (ถ้ามี)"
                   />
                 </div>
 
