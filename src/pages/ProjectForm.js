@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { getFirestore, doc, getDoc, setDoc, addDoc, collection } from 'firebase/firestore';
-import { getStorage, ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
+import { getStorage, ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage';
 import { useAuth } from '../contexts/AuthContext';
 import app from '../firebase';
 import MapPicker from '../components/MapPicker';
@@ -11,17 +11,18 @@ import { generateYearRange, getCurrentYear } from '../utils/yearUtils';
 function ProjectForm() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const yearFromParams = searchParams.get('year');
   const { currentUser } = useAuth();
   const db = getFirestore(app);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
   const years = generateYearRange();
   const isEditMode = Boolean(id);
   
   const [formData, setFormData] = useState({
     name: '',
-    year: getCurrentYear(),
+    year: yearFromParams || getCurrentYear(),
     location: {  // กำหนดค่าเริ่มต้น
       lat: 16.4419,
       lng: 102.8360,
@@ -47,14 +48,15 @@ function ProjectForm() {
     
     try {
       setLoading(true);
-      const projectRef = doc(db, formData.year, id);
+      const projectYear = yearFromParams || formData.year;
+      const projectRef = doc(db, projectYear, id);
       const projectDoc = await getDoc(projectRef);
       
       if (projectDoc.exists()) {
         const projectData = projectDoc.data();
         setFormData({
           ...projectData,
-          year: formData.year,
+          year: projectYear,
           location: projectData.location || {
             lat: 16.4419,
             lng: 102.8360,
@@ -72,7 +74,7 @@ function ProjectForm() {
     } finally {
       setLoading(false);
     }
-  }, [id, db, formData.year, navigate]);
+  }, [id, db, formData.year, navigate, yearFromParams]);
 
   // ตรวจสอบการเข้าสู่ระบบและดึงข้อมูลโครงการ
   useEffect(() => {
@@ -164,7 +166,6 @@ function ProjectForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    setSuccess('');
     if (!validateForm()) return;
     
     setLoading(true);
@@ -180,7 +181,8 @@ function ProjectForm() {
         for (const fileData of filesToUpload) {
           const timestamp = Date.now();
           const fileName = `${timestamp}_${fileData.name}`;
-          const storagePath = `projects/${formData.year}/${id || 'new'}/${fileName}`;
+          // เปลี่ยนจาก 'new' เป็น 'temp_project' ซึ่งสื่อความหมายมากกว่า
+          const storagePath = `projects/${formData.year}/${id || 'temp_project'}/${fileName}`;
           const storageRef = ref(storage, storagePath);
           
           // อัพโหลดไฟล์
@@ -214,15 +216,13 @@ function ProjectForm() {
 
       if (id) {
         await setDoc(doc(db, formData.year, id), saveData);
-        setSuccess('อัปเดตโครงการเรียบร้อยแล้ว');
       } else {
         saveData.createdAt = new Date().toISOString();
         saveData.createdBy = currentUser.uid;
-        const docRef = await addDoc(collection(db, formData.year), saveData);
-        setSuccess(`เพิ่มโครงการเรียบร้อยแล้ว (รหัส: ${docRef.id})`);
+        await addDoc(collection(db, formData.year), saveData);
       }
 
-      setTimeout(() => navigate('/manage-projects'), 1000);
+      navigate('/manage-projects');
       
     } catch (error) {
       console.error("Error saving project:", error);
@@ -232,6 +232,19 @@ function ProjectForm() {
     }
   };
 
+  // ฟังก์ชันลบไฟล์จาก Firebase Storage
+  const handleDeleteFileFromStorage = useCallback(async (filePath) => {
+    try {
+      const storage = getStorage(app);
+      const fileRef = ref(storage, filePath);
+      await deleteObject(fileRef);
+      console.log("File deleted successfully from Firebase Storage:", filePath);
+    } catch (error) {
+      console.error("Error deleting file from Firebase Storage:", error);
+      throw error; // ส่งต่อ error เพื่อให้ component ที่เรียกใช้จัดการต่อไป
+    }
+  }, []);
+
   return (
     <div className="container mt-5 py-4">
       <div className="row justify-content-center">
@@ -239,7 +252,9 @@ function ProjectForm() {
           <div className="card shadow-sm mb-4">
             <div className="card-header bg-white border-bottom">
               <h3 className="card-title mb-0">
-                {isEditMode ? 'แก้ไขโครงการชลประทาน' : 'เพิ่มโครงการชลประทาน'}
+                {isEditMode 
+                  ? `แก้ไขโครงการชลประทาน ปี ${yearFromParams || formData.year}` 
+                  : 'เพิ่มโครงการชลประทาน'}
               </h3>
             </div>
             
@@ -248,11 +263,7 @@ function ProjectForm() {
                 <div className="alert alert-danger">{error}</div>
               )}
               
-              {success && (
-                <div className="alert alert-success">{success}</div>
-              )}
-              
-              {loading && !error && !success && (
+              {loading && !error && (
                 <div className="text-center my-4">
                   <div className="spinner-border text-primary" role="status">
                     <span className="visually-hidden">กำลังโหลด...</span>
@@ -262,21 +273,24 @@ function ProjectForm() {
               )}
 
               <form onSubmit={handleSubmit}>
-                <div className="mb-3">
-                  <label className="form-label">ปีงบประมาณ <span className="text-danger">*</span></label>
-                  <select 
-                    className="form-select"
-                    name="year"
-                    value={formData.year}
-                    onChange={handleYearChange}
-                    disabled={loading}
-                    required
-                  >
-                    {years.map(year => (
-                      <option key={year} value={year}>{year}</option>
-                    ))}
-                  </select>
-                </div>
+                {/* แสดงปีงบประมาณเฉพาะเมื่อเป็นการสร้างโครงการใหม่เท่านั้น */}
+                {!isEditMode && (
+                  <div className="mb-3">
+                    <label className="form-label">ปีงบประมาณ <span className="text-danger">*</span></label>
+                    <select 
+                      className="form-select"
+                      name="year"
+                      value={formData.year}
+                      onChange={handleYearChange}
+                      disabled={loading}
+                      required
+                    >
+                      {years.map(year => (
+                        <option key={year} value={year}>{year}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
 
                 <div className="mb-3">
                   <label className="form-label">ชื่อโครงการ <span className="text-danger">*</span></label>
@@ -330,6 +344,7 @@ function ProjectForm() {
                         files={formData.files} 
                         onFileChange={handleFileChange}
                         year={formData.year}
+                        onDeleteFromStorage={handleDeleteFileFromStorage}
                       />
                     </div>
                   </div>

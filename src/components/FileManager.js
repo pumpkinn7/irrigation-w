@@ -3,7 +3,7 @@ import React, { useState, useRef } from 'react';
 const MAX_FILES = 5;
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
-function FileManager({ files = [], onFileChange }) {
+function FileManager({ files = [], onFileChange, onDeleteFromStorage }) {
   const [error, setError] = useState(null);
   const fileInputRef = useRef(null);
   
@@ -43,12 +43,24 @@ function FileManager({ files = [], onFileChange }) {
     }
   };
 
-  const handleRemoveFile = (index) => {
+  const handleRemoveFile = async (index) => {
     const newFiles = [...safeFiles];
+    const removedFile = newFiles[index];
     
     // ถ้ามี preview URL ให้เคลียร์ทิ้ง
-    if (newFiles[index].preview) {
-      URL.revokeObjectURL(newFiles[index].preview);
+    if (removedFile.preview) {
+      URL.revokeObjectURL(removedFile.preview);
+    }
+    
+    // ลบไฟล์จาก Storage ถ้าไฟล์มีข้อมูล path และ onDeleteFromStorage ถูกส่งมา
+    if (removedFile.path && onDeleteFromStorage) {
+      try {
+        await onDeleteFromStorage(removedFile.path);
+      } catch (error) {
+        console.error("Error deleting file from storage:", error);
+        setError('ไม่สามารถลบไฟล์จากระบบได้');
+        return;
+      }
     }
     
     newFiles.splice(index, 1);
