@@ -71,17 +71,11 @@ function Navbar() {
         </button>
         <div className="collapse navbar-collapse" id="navbarNav">
           <ul className="navbar-nav ms-auto align-items-center">
-            <li className="nav-item">
-              <Link className="nav-link" to="/projects">หน่วยงานที่เกี่ยวข้อง</Link>
-            </li>
             {currentUser && (
               <li className="nav-item">
                 <Link className="nav-link" to="/manage-projects">การจัดการโครงการ</Link>
               </li>
             )}
-            <li className="nav-item">
-              <Link className="nav-link" to="/contact">ติดต่อ</Link>
-            </li>
             
             {currentUser ? (
               <>
@@ -107,7 +101,7 @@ function Navbar() {
                 <li className="nav-item dropdown">
                   <a 
                     className="nav-link dropdown-toggle" 
-                    href="#!" // เปลี่ยนจาก # เป็น #!
+                    href="#!" 
                     id="navbarDropdown" 
                     role="button" 
                     data-bs-toggle="dropdown" 
