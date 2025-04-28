@@ -71,6 +71,10 @@ function Navbar() {
         </button>
         <div className="collapse navbar-collapse" id="navbarNav">
           <ul className="navbar-nav ms-auto align-items-center">
+            {/* เพิ่มลิงก์ไปยังหน้าหลัก */}
+            <li className="nav-item">
+              <Link className="nav-link" to="/">โครงการชลประทาน</Link>
+            </li>
             {currentUser && (
               <li className="nav-item">
                 <Link className="nav-link" to="/manage-projects">การจัดการโครงการ</Link>

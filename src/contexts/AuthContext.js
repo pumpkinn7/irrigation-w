@@ -14,14 +14,15 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        // ตรวจสอบว่าอีเมลถูกยืนยันหรือไม่
         if (!user.emailVerified) {
-          // ถ้าอีเมลยังไม่ถูกยืนยัน ให้ลงชื่อออก
-          console.log('Email not verified, signing out');
-          await signOut(auth);
-          setCurrentUser(null);
+          // ลงชื่อออกเฉพาะกรณีที่อยู่ในหน้าที่ต้องการการยืนยันตัวตนเท่านั้น
+          const protectedPaths = ['/manage-projects', '/manage-projects/create', '/manage-projects/edit'];
+          if (window.location.pathname.match(new RegExp(protectedPaths.join('|')))) {
+            console.log('Email not verified, signing out from protected route');
+            await signOut(auth);
+            setCurrentUser(null);
+          }
         } else {
-          // ดึงข้อมูลเพิ่มเติมจาก Firestore
           try {
             const userDoc = await getDoc(doc(db, 'users', user.uid));
             if (userDoc.exists()) {
@@ -39,13 +40,13 @@ export function AuthProvider({ children }) {
         }
       } else {
         setCurrentUser(null);
-        localStorage.removeItem('user'); // ลบข้อมูลล็อกอินใน localStorage
+        localStorage.removeItem('user');
       }
       setLoading(false);
     });
 
     return unsubscribe;
-  }, [auth, db]); // เพิ่ม dependencies
+  }, [auth, db]);
 
   const value = {
     currentUser,
