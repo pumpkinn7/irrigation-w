@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { getFirestore, collection, getDocs, deleteDoc, doc } from 'firebase/firestore';
+import { getFirestore, collection, getDocs, deleteDoc, doc, getDoc } from 'firebase/firestore';
 import { getStorage, ref, deleteObject, listAll } from 'firebase/storage';
 import app from '../firebase';
 import { generateYearRange, getCurrentYear } from '../utils/yearUtils';
@@ -20,7 +20,12 @@ function ManageProjects() {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [selectedProject, setSelectedProject] = useState(null);
   const [loading, setLoading] = useState(true);
-
+  
+  // เพิ่ม state สำหรับ modal รายละเอียด
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [projectDetail, setProjectDetail] = useState(null);
+  const [editorInfo, setEditorInfo] = useState(null);
+  
   useEffect(() => {
     if (!currentUser) {
       navigate('/login');
@@ -129,10 +134,31 @@ function ManageProjects() {
     setSelectedProject(project);
   };
 
+  // ฟังก์ชันเปิด modal รายละเอียดและดึงข้อมูลผู้แก้ไข
+  const handleShowDetail = async (project, e) => {
+    e.stopPropagation(); // ป้องกันการ trigger event ของแถว
+    setProjectDetail(project);
+    setShowDetailModal(true);
+    
+    // ดึงข้อมูลผู้แก้ไข
+    if (project.updatedBy) {
+      try {
+        const userDoc = await getDoc(doc(db, 'users', project.updatedBy));
+        if (userDoc.exists()) {
+          setEditorInfo(userDoc.data());
+        }
+      } catch (error) {
+        console.error("Error fetching editor info:", error);
+      }
+    } else {
+      setEditorInfo(null);
+    }
+  };
+
   return (
-    <div className="container mt-5 pt-4">
+    <div className="container mt-5 pt-5 pb-4">
       <div className="d-flex justify-content-between align-items-center mb-3">
-        <h2>การจัดการโครงการ</h2>
+        <h2>จัดการโครงการ</h2>
         <Link to="/manage-projects/create" className="btn btn-primary">
           เพิ่มโครงการ
         </Link>
@@ -168,8 +194,7 @@ function ManageProjects() {
                     <thead className="table-light sticky-top" style={{ position: 'sticky', top: 0, zIndex: 1 }}>
                       <tr>
                         <th scope="col" width="70%">ชื่อโครงการ</th>
-                        <th scope="col" width="15%" className="text-center"></th>
-                        <th scope="col" width="15%" className="text-center"></th>
+                        <th scope="col" width="30%" className="text-center">การจัดการ</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -181,25 +206,31 @@ function ManageProjects() {
                           style={{ cursor: 'pointer' }}
                         >
                           <td>{project.name}</td>
-                          <td className="text-center">
-                            <Link 
-                              to={`/manage-projects/edit/${project.id}?year=${selectedYear}`} 
-                              className="btn btn-sm btn-outline-primary"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              แก้ไข
-                            </Link>
-                          </td>
-                          <td className="text-center">
-                            <button
-                              className="btn btn-sm btn-outline-danger"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                prepareDeleteProject(project);
-                              }}
-                            >
-                              ลบ
-                            </button>
+                          <td>
+                            <div className="d-flex justify-content-center gap-1">
+                              <button
+                                className="btn btn-sm btn-outline-info"
+                                onClick={(e) => handleShowDetail(project, e)}
+                              >
+                                ข้อมูล
+                              </button>
+                              <Link 
+                                to={`/manage-projects/edit/${project.id}?year=${selectedYear}`} 
+                                className="btn btn-sm btn-outline-warning"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                แก้ไข
+                              </Link>
+                              <button
+                                className="btn btn-sm btn-outline-danger"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  prepareDeleteProject(project);
+                                }}
+                              >
+                                ลบ
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))}
@@ -228,6 +259,78 @@ function ManageProjects() {
           </div>
         </div>
       </div>
+
+      {/* Modal แสดงรายละเอียดโครงการ */}
+      {showDetailModal && projectDetail && (
+        <>
+          <div 
+            className="modal fade show" 
+            tabIndex="-1" 
+            role="dialog" 
+            aria-labelledby="detailModalLabel" 
+            aria-hidden="false" 
+            style={{ display: 'block' }}
+            onClick={() => setShowDetailModal(false)}
+          >
+            <div 
+              className="modal-dialog modal-dialog-centered" 
+              role="document"
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title" id="detailModalLabel">รายละเอียดโครงการ</h5>
+                  <button 
+                    type="button" 
+                    className="btn-close" 
+                    onClick={() => setShowDetailModal(false)}
+                    aria-label="Close"
+                  ></button>
+                </div>
+                <div className="modal-body">
+                  <h5 className="mb-3">{projectDetail.name}</h5>
+                  <p><strong>ปีงบประมาณ:</strong> {projectDetail.year || selectedYear}</p>
+                  {projectDetail.location?.address && (
+                    <p><strong>ที่อยู่:</strong> {projectDetail.location.address}</p>
+                  )}
+                  
+                  {projectDetail.files && projectDetail.files.length > 0 && (
+                    <>
+                      <h6 className="mt-3 mb-2">เอกสารแนบ</h6>
+                      <ul className="list-group mb-3">
+                        {projectDetail.files.map((file, index) => (
+                          <li key={index} className="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                              <i className="bi bi-file-earmark me-2"></i>
+                              {file.name}
+                            </div>
+                            {file.url && (
+                              <a href={file.url} target="_blank" rel="noopener noreferrer" className="btn btn-sm btn-outline-primary">
+                                เปิดไฟล์
+                              </a>
+                            )}
+                          </li>
+                        ))}
+                      </ul>
+                    </>
+                  )}
+                  
+                  <div className="mt-3">
+                    <p><strong>วันที่สร้าง:</strong> {new Date(projectDetail.createdAt).toLocaleDateString('th-TH')}</p>
+                    {projectDetail.updatedAt && (
+                      <p><strong>แก้ไขล่าสุด:</strong> {new Date(projectDetail.updatedAt).toLocaleDateString('th-TH')}</p>
+                    )}
+                    {projectDetail.updatedBy && (
+                      <p><strong>แก้ไขโดย:</strong> {editorInfo ? `${editorInfo.firstName} ${editorInfo.lastName}` : 'ไม่ระบุชื่อผู้แก้ไข'}</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="modal-backdrop fade show"></div>
+        </>
+      )}
 
       {/* Modal ยืนยันการลบ */}
       {showDeleteModal && (

@@ -56,28 +56,31 @@ function Navbar() {
     <nav className="navbar navbar-expand-lg navbar-light bg-light fixed-top">
       <div className="container">
         <Link className="navbar-brand" to="/">
-          โครงการชลประทาน
+          <img 
+            src="/images/logo.png" 
+            alt="กรมชลประทาน" 
+            height="65" 
+            style={{ objectFit: 'contain' }}
+          />
         </Link>
+        
         <button 
           className="navbar-toggler" 
           type="button" 
           data-bs-toggle="collapse" 
-          data-bs-target="#navbarNav" 
-          aria-controls="navbarNav" 
-          aria-expanded="false" 
+          data-bs-target="#navbarNav"
+          aria-controls="navbarNav"
+          aria-expanded="false"
           aria-label="Toggle navigation"
         >
           <span className="navbar-toggler-icon"></span>
         </button>
+
         <div className="collapse navbar-collapse" id="navbarNav">
           <ul className="navbar-nav ms-auto align-items-center">
-            {/* เพิ่มลิงก์ไปยังหน้าหลัก */}
-            <li className="nav-item">
-              <Link className="nav-link" to="/">โครงการชลประทาน</Link>
-            </li>
             {currentUser && (
               <li className="nav-item">
-                <Link className="nav-link" to="/manage-projects">การจัดการโครงการ</Link>
+                <Link className="nav-link" to="/manage-projects">จัดการโครงการ</Link>
               </li>
             )}
             
