@@ -54,10 +54,10 @@ function Home() {
   };
 
   return (
-    <div className="container mt-5 pt-5">
-      <div className="row justify-content-center" style={{ height: 'calc(80vh - 100px)' }}>
+    <div className="container mt-5 pt-4">
+      <div className="row justify-content-center g-3">
         {/* ส่วนด้านซ้าย - การค้นหาและรายการโครงการ */}
-        <div className="col-lg-5 col-md-12 px-2">
+        <div className="col-lg-6 col-md-12">
           <div className="card shadow-sm h-100">
             <div className="card-body d-flex flex-column">
               <h4 className="mb-3">โครงการชลประทานปี {selectedYear}</h4>
@@ -113,11 +113,12 @@ function Home() {
                     }
                   </h5>
                   
-                  {/* กำหนดความสูงคงที่สำหรับ table container */}
+                  {/* ตารางแสดงโครงการ - ปรับความสูงให้เหมาะสม */}
                   <div 
                     className="table-responsive flex-grow-1" 
                     style={{ 
-                      height: "300px", /* กำหนดความสูงที่แน่นอน */
+                      minHeight: "300px",
+                      height: "100%",
                       overflowY: 'auto',
                       border: filteredProjects.length === 0 ? '1px solid #dee2e6' : 'none'
                     }}
@@ -157,9 +158,14 @@ function Home() {
         </div>
 
         {/* ส่วนด้านขวา - แผนที่ */}
-        <div className="col-lg-5 col-md-12 px-2">
+        <div className="col-lg-6 col-md-12">
           <div className="card shadow-sm h-100">
-            <div className="card-body p-0 h-100">
+            {/* กำหนดความสูงแบบแน่นอนแต่ต่างกันตามขนาดหน้าจอ */}
+            <div className="card-body p-0" 
+                style={{ 
+                  height: "400px", 
+                  minHeight: "400px"
+                }}>
               <MapOverview 
                 projects={filteredProjects} 
                 selectedProject={selectedProject}

@@ -1,0 +1,28 @@
+/* ลบสไตล์ทั้งหมดเพื่อใช้ Bootstrap โดยตรง */
+/* สามารถเพิ่มสไตล์เฉพาะที่จำเป็นในอนาคตได้ที่นี่ */
+
+/* เพิ่มสไตล์สำหรับ responsive design */
+
+/* ปรับแต่ง map container สำหรับอุปกรณ์มือถือ */
+@media (max-width: 991.98px) {  /* Bootstrap lg breakpoint */
+  .mobile-map-card {
+    height: 350px !important;
+    margin-bottom: 25px;
+  }
+  
+  /* ปรับความสูงของพื้นที่แสดงตาราง */
+  .table-responsive {
+    height: 250px !important;
+  }
+}
+
+/* สำหรับอุปกรณ์หน้าจอเล็กมาก */
+@media (max-width: 575.98px) {  /* Bootstrap sm breakpoint */
+  .mobile-map-card {
+    height: 300px !important;
+  }
+  
+  .table-responsive {
+    height: 200px !important;
+  }
+}
