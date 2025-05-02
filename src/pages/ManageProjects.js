@@ -157,18 +157,18 @@ function ManageProjects() {
 
   return (
     <div className="container mt-5 pt-5 pb-4">
-      <div className="d-flex justify-content-between align-items-center mb-3">
-        <h2>จัดการโครงการ</h2>
-        <Link to="/manage-projects/create" className="btn btn-primary">
-          เพิ่มโครงการ
-        </Link>
-      </div>
-
       <div className="row justify-content-center g-3">
         {/* ส่วนซ้าย - รายการโครงการ */}
         <div className="col-lg-6 col-md-12">
           <div className="card shadow-sm h-100">
             <div className="card-body d-flex flex-column">
+              <div className="d-flex justify-content-between align-items-center mb-3">
+                <h2>จัดการโครงการ</h2>
+                <Link to="/manage-projects/create" className="btn btn-primary">
+                  เพิ่มโครงการ
+                </Link>
+              </div>
+
               <div className="mb-3">
                 <label className="form-label">ปีงบประมาณ</label>
                 <select 
@@ -189,7 +189,12 @@ function ManageProjects() {
                   </div>
                 </div>
               ) : projects.length > 0 ? (
-                <div className="table-responsive flex-grow-1" style={{ minHeight: "300px", height: "100%", overflowY: 'auto' }}>
+                <div className="table-responsive flex-grow-1" style={{ 
+                  height: "280px", 
+                  maxHeight: "280px", 
+                  overflowY: 'auto',
+                  marginBottom: "10px"
+                }}>
                   <table className="table table-hover table-striped mb-0">
                     <thead className="table-light sticky-top" style={{ position: 'sticky', top: 0, zIndex: 1 }}>
                       <tr>

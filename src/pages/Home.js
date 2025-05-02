@@ -140,10 +140,11 @@ function Home() {
                   <div 
                     className="table-responsive flex-grow-1" 
                     style={{ 
-                      minHeight: "300px",
-                      height: "100%",
+                      height: "280px",  // ปรับความสูงให้พอดีกับการแสดงประมาณ 4-5 แถว
+                      maxHeight: "280px", // กำหนดความสูงสูงสุด
                       overflowY: 'auto',
-                      border: filteredProjects.length === 0 ? '1px solid #dee2e6' : 'none'
+                      border: filteredProjects.length === 0 ? '1px solid #dee2e6' : 'none',
+                      marginBottom: "10px" // เพิ่มระยะห่างด้านล่าง
                     }}
                   >
                     {filteredProjects.length > 0 ? (
