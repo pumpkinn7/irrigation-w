@@ -78,6 +78,9 @@ function Navbar() {
 
         <div className="collapse navbar-collapse" id="navbarNav">
           <ul className="navbar-nav ms-auto align-items-center">
+            <li className="nav-item">
+              <Link className="nav-link" to="/">โครงการ</Link>
+            </li>
             {currentUser && (
               <li className="nav-item">
                 <Link className="nav-link" to="/manage-projects">จัดการโครงการ</Link>
