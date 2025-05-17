@@ -2,11 +2,13 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { getFirestore, collection, getDocs, doc, getDoc } from 'firebase/firestore';
 import app from '../firebase';
 import { generateYearRange, getCurrentYear } from '../utils/yearUtils';
+import { departments } from '../utils/constants';
 import MapOverview from '../components/MapOverview';
 
 function Home() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedYear, setSelectedYear] = useState(getCurrentYear());
+  const [selectedDepartment, setSelectedDepartment] = useState('');
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -36,24 +38,35 @@ function Home() {
     } finally {
       setLoading(false);
     }
-  }, [db, selectedYear]); // เพิ่ม dependencies ที่จำเป็น
+  }, [db, selectedYear]);
 
   useEffect(() => {
     fetchProjects();
-  }, [fetchProjects]); // เพิ่ม fetchProjects เป็น dependency
+  }, [fetchProjects]);
+
+  // เปลี่ยนเป็นการรีเซ็ตหน่วยงานเมื่อเปลี่ยนปี
+  useEffect(() => {
+    setSelectedDepartment('');
+  }, [selectedYear]);
 
   const handleSearch = (e) => {
     e.preventDefault();
     // ตัวกรองข้อมูลจะทำในการแสดงผลไม่ต้อง query ใหม่
   };
 
-  const filteredProjects = projects.filter(project => 
-    project.name?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // ปรับปรุงการกรองข้อมูลให้รองรับทั้งชื่อโครงการและหน่วยงาน
+  const filteredProjects = projects.filter(project => {
+    // กรองตามการค้นหาชื่องาน
+    const nameMatch = project.name?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    // กรองตามหน่วยงาน
+    const departmentMatch = !selectedDepartment || project.department === selectedDepartment;
+    
+    return nameMatch && departmentMatch;
+  });
 
   const handleMarkerClick = (project) => {
     setSelectedProject(project);
-    // อาจมีการเลื่อนไปยังรายการที่เลือกด้วย
   };
 
   // เพิ่มฟังก์ชันเปิด modal รายละเอียด
@@ -77,47 +90,55 @@ function Home() {
   };
 
   return (
-    <div className="container mt-5 pt-5 pb-4">  {/* เพิ่ม pb-4 และปรับ padding ด้านบน */}
+    <div className="container mt-5 pt-5 pb-4">
       <div className="row justify-content-center g-3">
         {/* ส่วนด้านซ้าย - การค้นหาและรายการโครงการ */}
         <div className="col-lg-6 col-md-12">
           <div className="card shadow-sm h-100">
             <div className="card-body d-flex flex-column">
-              <h4 className="mb-3">โครงการชลประทานปี {selectedYear}</h4>
+              <h4 className="mb-3">งานชลประทานปี {selectedYear}</h4>
               
               <form onSubmit={handleSearch} className="mb-3">
                 <div className="input-group">
                   <input 
                     type="text" 
                     className="form-control" 
-                    placeholder="ค้นหาโครงการ..." 
+                    placeholder="ค้นหางาน..." 
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
                   <button className="btn btn-outline-info" type="submit">ค้นหา</button>
-                  
-                  <button 
-                    className="btn btn-outline-info dropdown-toggle" 
-                    type="button" 
-                    data-bs-toggle="dropdown" 
-                    aria-expanded="false"
-                  >
-                    ปี {selectedYear}
-                  </button>
-                  <ul className="dropdown-menu dropdown-menu-end">
-                    {years.map(year => (
-                      <li key={year}>
-                        <button 
-                          className="dropdown-item" 
-                          onClick={() => setSelectedYear(year)}
-                        >
-                          {year}
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
                 </div>
               </form>
+
+              <div className="row g-3 mb-3">
+                <div className="col-md-6">
+                  <label className="form-label">ปีงบประมาณ</label>
+                  <select 
+                    className="form-select"
+                    value={selectedYear}
+                    onChange={(e) => setSelectedYear(e.target.value)}
+                  >
+                    {years.map(year => (
+                      <option key={year} value={year}>{year}</option>
+                    ))}
+                  </select>
+                </div>
+                
+                <div className="col-md-6">
+                  <label className="form-label">หน่วยงานดำเนินการ</label>
+                  <select
+                    className="form-select"
+                    value={selectedDepartment}
+                    onChange={(e) => setSelectedDepartment(e.target.value)}
+                  >
+                    <option value="">หน่วยงานทั้งหมด</option>
+                    {departments.map(dept => (
+                      <option key={dept} value={dept}>{dept}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
 
               {loading ? (
                 <div className="text-center my-5">
@@ -130,29 +151,26 @@ function Home() {
               ) : (
                 <div className="project-list flex-grow-1 d-flex flex-column">
                   <h5 className="mb-3">
-                    {filteredProjects.length > 0 
-                      ? `พบโครงการทั้งหมด ${filteredProjects.length} รายการ`
-                      : `ไม่พบโครงการในปี ${selectedYear}`
-                    }
+                    พบงานทั้งหมด {filteredProjects.length} รายการ
                   </h5>
                   
-                  {/* ตารางแสดงโครงการ - ปรับความสูงให้เหมาะสม */}
+                  {/* ตารางแสดงงาน */}
                   <div 
                     className="table-responsive flex-grow-1" 
                     style={{ 
-                      height: "280px",  // ปรับความสูงให้พอดีกับการแสดงประมาณ 4-5 แถว
-                      maxHeight: "280px", // กำหนดความสูงสูงสุด
+                      height: "280px",
+                      maxHeight: "280px",
                       overflowY: 'auto',
                       border: filteredProjects.length === 0 ? '1px solid #dee2e6' : 'none',
-                      marginBottom: "10px" // เพิ่มระยะห่างด้านล่าง
+                      marginBottom: "10px"
                     }}
                   >
                     {filteredProjects.length > 0 ? (
                       <table className="table table-hover table-striped mb-0">
                         <thead className="table-light sticky-top" style={{ position: 'sticky', top: 0, zIndex: 1 }}>
                           <tr>
-                            <th scope="col" width="85%">ชื่อโครงการ</th>
-                            <th scope="col" width="15%" className="text-center"></th>
+                            <th scope="col" width="70%">ชื่องาน</th>
+                            <th scope="col" width="30%" className="text-center"></th>
                           </tr>
                         </thead>
                         <tbody>
@@ -178,7 +196,7 @@ function Home() {
                       </table>
                     ) : (
                       <div className="d-flex align-items-center justify-content-center h-100">
-                        <p className="text-muted">ไม่มีข้อมูลโครงการที่แสดงในขณะนี้</p>
+                        <p className="text-muted">ไม่มีรายการงานที่แสดงในขณะนี้</p>
                       </div>
                     )}
                   </div>
@@ -191,7 +209,6 @@ function Home() {
         {/* ส่วนด้านขวา - แผนที่ */}
         <div className="col-lg-6 col-md-12">
           <div className="card shadow-sm h-100">
-            {/* กำหนดความสูงแบบแน่นอนแต่ต่างกันตามขนาดหน้าจอ */}
             <div className="card-body p-0" 
                 style={{ 
                   height: "400px", 
@@ -207,7 +224,7 @@ function Home() {
         </div>
       </div>
 
-      {/* เพิ่ม Modal แสดงรายละเอียดโครงการ */}
+      {/* Modal แสดงรายละเอียดโครงการ */}
       {showDetailModal && projectDetail && (
         <>
           <div 
@@ -226,7 +243,7 @@ function Home() {
             >
               <div className="modal-content">
                 <div className="modal-header">
-                  <h5 className="modal-title" id="detailModalLabel">รายละเอียดโครงการ</h5>
+                  <h5 className="modal-title" id="detailModalLabel">รายละเอียดงาน</h5>
                   <button 
                     type="button" 
                     className="btn-close" 
@@ -237,6 +254,7 @@ function Home() {
                 <div className="modal-body">
                   <h5 className="mb-3">{projectDetail.name}</h5>
                   <p><strong>ปีงบประมาณ:</strong> {projectDetail.year || selectedYear}</p>
+                  <p><strong>หน่วยงานดำเนินการ:</strong> {projectDetail.department}</p>
                   {projectDetail.location?.address && (
                     <p><strong>ที่อยู่:</strong> {projectDetail.location.address}</p>
                   )}

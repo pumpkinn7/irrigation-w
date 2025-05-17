@@ -205,7 +205,7 @@ function ManageProjects() {
                     value={selectedDepartment}
                     onChange={(e) => setSelectedDepartment(e.target.value)}
                   >
-                    <option value="">เลือกหน่วยงาน</option>
+                    <option value="">หน่วยงานทั้งหมด</option>
                     {departments.map(dept => (
                       <option key={dept} value={dept}>{dept}</option>
                     ))}

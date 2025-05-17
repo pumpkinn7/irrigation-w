@@ -133,14 +133,12 @@ function MapOverview({ projects, selectedProject, onMarkerClick }) {
                 >
                   <div className="custom-info-window" style={customInfoBoxStyle}>
                     <h6 className="mb-1">{project.name}</h6>
+                    <p className="mb-1 small"><strong>หน่วยงาน:</strong> {project.department}</p>
                     {project.location.address && (
                       <p className="mb-1 small">{project.location.address}</p>
                     )}
                     <p className="mb-0 small text-muted">
                       พิกัด: {project.location.lat.toFixed(4)}, {project.location.lng.toFixed(4)}
-                    </p>
-                    <p className="mb-0 small text-muted">
-                      แผนก: {project.department}
                     </p>
                   </div>
                 </OverlayView>
