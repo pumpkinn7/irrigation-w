@@ -213,68 +213,62 @@ function ManageProjects() {
                   </div>
                 </div>
               ) : (
-                filteredProjects.length > 0 ? (
-                  <div className="table-responsive flex-grow-1" style={{ 
-                    height: "280px", 
-                    maxHeight: "280px", 
-                    overflowY: 'auto',
-                    marginBottom: "10px"
-                  }}>
-                    <table className="table table-hover table-striped mb-0">
-                      <thead className="table-light sticky-top" style={{ position: 'sticky', top: 0, zIndex: 1 }}>
-                        <tr>
-                          <th scope="col" width="70%">ชื่องาน</th>
-                          <th scope="col" width="30%" className="text-center">การจัดการ</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {filteredProjects.map(project => (
-                          <tr 
-                            key={project.id}
-                            className={selectedProject?.id === project.id ? 'table-info' : ''}
-                            onClick={() => handleProjectClick(project)}
-                            style={{ cursor: 'pointer' }}
-                          >
-                            <td>{project.name}</td>
-                            <td>
-                              <div className="d-flex justify-content-center gap-1">
-                                <button
-                                  className="btn btn-sm btn-outline-info"
-                                  onClick={(e) => handleShowDetail(project, e)}
-                                  onMouseDown={(e) => e.stopPropagation()} // เพิ่มเพื่อป้องกันปัญหา event bubbling
-                                >
-                                  ข้อมูล
-                                </button>
-                                <Link 
-                                  to={`/manage-projects/edit/${project.id}?year=${selectedYear}`} 
-                                  className="btn btn-sm btn-outline-warning"
-                                  onClick={(e) => e.stopPropagation()}
-                                >
-                                  แก้ไข
-                                </Link>
-                                <button
-                                  className="btn btn-sm btn-outline-danger"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    prepareDeleteProject(project);
-                                  }}
-                                >
-                                  ลบ
-                                </button>
-                              </div>
-                            </td>
+                <div className="flex-grow-1" style={{ height: '375px' }}>
+                  {filteredProjects.length > 0 ? (
+                    <div className="table-responsive h-100">
+                      <table className="table table-striped mb-0">
+                        <thead className="table-light sticky-top" style={{ position: 'sticky', top: 0, zIndex: 1 }}>
+                          <tr>
+                            <th scope="col" width="70%">ชื่องาน</th>
+                            <th scope="col" width="30%" className="text-center">การจัดการ</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                ) : (
-                  <div className="alert alert-info">
-                    {selectedDepartment 
-                      ? `ไม่พบงานใน ${selectedDepartment} ของปีงบประมาณ ${selectedYear}`
-                      : `ไม่พบงานในปีงบประมาณ ${selectedYear}`}
-                  </div>
-                )
+                        </thead>
+                        <tbody>
+                          {filteredProjects.map(project => (
+                            <tr 
+                              key={project.id}
+                              onClick={() => handleProjectClick(project)}
+                              style={{ cursor: 'pointer' }}
+                            >
+                              <td>{project.name}</td>
+                              <td>
+                                <div className="d-flex justify-content-center gap-1">
+                                  <button
+                                    className="btn btn-sm btn-outline-info"
+                                    onClick={(e) => handleShowDetail(project, e)}
+                                    onMouseDown={(e) => e.stopPropagation()}
+                                  >
+                                    ข้อมูล
+                                  </button>
+                                  <Link 
+                                    to={`/manage-projects/edit/${project.id}?year=${selectedYear}`} 
+                                    className="btn btn-sm btn-outline-warning"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    แก้ไข
+                                  </Link>
+                                  <button
+                                    className="btn btn-sm btn-outline-danger"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      prepareDeleteProject(project);
+                                    }}
+                                  >
+                                    ลบ
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <div className="d-flex align-items-center justify-content-center h-100">
+                      <p className="text-muted">ไม่มีรายการงานที่แสดงในขณะนี้</p>
+                    </div>
+                  )}
+                </div>
               )}
             </div>
           </div>
