@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { GoogleMap, useJsApiLoader, Marker, OverlayView } from '@react-google-maps/api';
+import { GoogleMap, Marker, OverlayView } from '@react-google-maps/api';
+import { useGoogleMapsApi } from '../services/GoogleMapsService';
 
 const mapContainerStyle = { 
   width: '100%', 
@@ -35,14 +36,12 @@ function MapOverview({ projects, selectedProject, onMarkerClick }) {
   const [map, setMap] = useState(null);
   const [activeMarker, setActiveMarker] = useState(null);
   
-  const { isLoaded } = useJsApiLoader({
-    googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY,
-    language: 'th'
-  });
+  // ใช้ service เดียวกับ MapPicker เพื่อไม่ให้โหลด API ซ้ำ
+  const { isLoaded } = useGoogleMapsApi();
 
   // ปรับ zoom และ center เมื่อมีโครงการหรือเลือกโครงการ
   useEffect(() => {
-    if (map) {
+    if (map && window.google) {
       if (selectedProject && selectedProject.location) {
         // ถ้ามีโครงการที่ถูกเลือก ให้ zoom ไปที่โครงการนั้น
         map.panTo({

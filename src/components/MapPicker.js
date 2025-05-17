@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { GoogleMap, useJsApiLoader, Marker, StandaloneSearchBox } from '@react-google-maps/api';
+import { GoogleMap, Marker, StandaloneSearchBox } from '@react-google-maps/api';
+import { useGoogleMapsApi } from '../services/GoogleMapsService';
 
 const mapContainerStyle = { width: '100%', height: '400px' };
 const defaultCenter = { lat: 16.4419, lng: 102.8360 }; // ขอนแก่น
@@ -9,11 +10,8 @@ function MapPicker({ location, onLocationChange }) {
   const [mapInstance, setMapInstance] = useState(null);
   const [searchBox, setSearchBox] = useState(null);
   
-  const { isLoaded } = useJsApiLoader({
-    googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY,
-    libraries: ['places'],
-    language: 'th'
-  });
+  // ใช้ service ที่สร้างขึ้นแทนการเรียก useJsApiLoader โดยตรง
+  const { isLoaded } = useGoogleMapsApi();
   
   const handleMapClick = (e) => {
     onLocationChange({ 
@@ -32,7 +30,7 @@ function MapPicker({ location, onLocationChange }) {
       
       onLocationChange(newPos);
       
-      // แก้ไขการใช้ optional chaining ที่ทำให้เกิด ESLint error
+      // แก้ไขการใช้ optional chaining
       if (mapInstance) {
         mapInstance.panTo(newPos);
         mapInstance.setZoom(15);
