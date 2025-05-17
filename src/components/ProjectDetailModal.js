@@ -57,7 +57,8 @@ const ProjectDetailModal = ({ project, isOpen, onClose, year }) => {
           onClick={e => e.stopPropagation()}
           style={{
             maxHeight: '90vh',
-            margin: '1.75rem auto'
+            margin: '1.75rem auto',
+            padding: '0 10px' // เพิ่ม padding ด้านข้าง
           }}
         >
           <div className="modal-content" style={{ maxHeight: '90vh' }}>
