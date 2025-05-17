@@ -160,14 +160,18 @@ function ManageProjects() {
         <div className="col-lg-6 col-md-12">
           <div className="card shadow-sm h-100">
             <div className="card-body d-flex flex-column">
-              <div className="d-flex justify-content-between align-items-center mb-3">
-                <h2>จัดการโครงการ</h2>
-                <Link 
-                  to={`/manage-projects/create?year=${selectedYear}${selectedDepartment ? `&department=${encodeURIComponent(selectedDepartment)}` : ''}`} 
-                  className="btn btn-primary"
-                >
-                  เพิ่มโครงการ
-                </Link>
+              <div className="mb-3">
+                <div className="d-flex justify-content-between align-items-center">
+                  <h4 className="mb-0">
+                    จัดการโครงการ
+                  </h4>
+                  <Link 
+                    to={`/manage-projects/create?year=${selectedYear}${selectedDepartment ? `&department=${encodeURIComponent(selectedDepartment)}` : ''}`} 
+                    className="btn btn-primary"
+                  >
+                    เพิ่มโครงการ
+                  </Link>
+                </div>
               </div>
 
               <div className="row g-3 mb-3">

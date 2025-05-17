@@ -30,6 +30,16 @@ const ProjectDetailModal = ({ project, isOpen, onClose, year }) => {
 
   if (!isOpen || !project) return null;
 
+  const formatCurrency = (amount) => {
+    if (!amount) return 'ไม่ระบุ';
+    return Number(amount).toLocaleString('th-TH') + ' บาท';
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return 'ไม่ระบุ';
+    return new Date(dateString).toLocaleDateString('th-TH');
+  };
+
   return (
     <>
       <div 
@@ -42,12 +52,21 @@ const ProjectDetailModal = ({ project, isOpen, onClose, year }) => {
         onClick={onClose}
       >
         <div 
-          className="modal-dialog modal-dialog-centered" 
+          className="modal-dialog modal-dialog-centered modal-lg" 
           role="document"
           onClick={e => e.stopPropagation()}
+          style={{
+            maxHeight: '90vh',
+            margin: '1.75rem auto'
+          }}
         >
-          <div className="modal-content">
-            <div className="modal-header">
+          <div className="modal-content" style={{ maxHeight: '90vh' }}>
+            <div className="modal-header" style={{ 
+              position: 'sticky', 
+              top: 0, 
+              backgroundColor: 'white',
+              zIndex: 1
+            }}>
               <h5 className="modal-title" id="detailModalLabel">รายละเอียดงาน</h5>
               <button 
                 type="button" 
@@ -56,82 +75,124 @@ const ProjectDetailModal = ({ project, isOpen, onClose, year }) => {
                 aria-label="Close"
               ></button>
             </div>
-            <div className="modal-body">
-              <h5 className="mb-3">{project.name}</h5>
-              <p><strong>ปีงบประมาณ:</strong> {project.year || year}</p>
-              <p><strong>หน่วยงานดำเนินการ:</strong> {project.department}</p>
-              {project.location?.address && (
-                <p><strong>ที่อยู่:</strong> {project.location.address}</p>
-              )}
-              
-              {project.files && project.files.length > 0 && (
-                <>
-                  <h6 className="mt-3 mb-2">เอกสารแนบ</h6>
-                  <ul className="list-group mb-3">
-                    {project.files.map((file, index) => (
-                      <li key={index} className="list-group-item d-flex justify-content-between align-items-center">
-                        <div>
-                          <i className="bi bi-file-earmark me-2"></i>
-                          {file.name}
+            <div className="modal-body" style={{ overflowY: 'auto', maxHeight: 'calc(90vh - 60px)' }}>
+              {/* ส่วนที่ 1: ข้อมูลพื้นฐาน */}
+              <div className="card mb-3">
+                <div className="card-header bg-light">
+                  <h6 className="mb-0">ข้อมูลพื้นฐาน</h6>
+                </div>
+                <div className="card-body">
+                  <div className="row">
+                    <div className="col-md-4">
+                      <p className="mb-1"><strong>ปีงบประมาณ:</strong></p>
+                      <p>{project.year || year}</p>
+                    </div>
+                    <div className="col-md-8">
+                      <p className="mb-1"><strong>ชื่องาน:</strong></p>
+                      <p>{project.name}</p>
+                    </div>
+                    <div className="col-12">
+                      <p className="mb-1"><strong>หน่วยงานดำเนินการ:</strong></p>
+                      <p>{project.department || 'ไม่ระบุ'}</p>
+                    </div>
+                    <div className="col-12">
+                      <p className="mb-1"><strong>ที่อยู่:</strong></p>
+                      <p>{project.location?.address || 'ไม่ระบุ'}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* ส่วนที่ 2: ข้อมูลงบประมาณและการถ่ายโอน */}
+              <div className="card mb-3">
+                <div className="card-header bg-light">
+                  <h6 className="mb-0">ข้อมูลงบประมาณและการถ่ายโอน</h6>
+                </div>
+                <div className="card-body">
+                  <div className="row">
+                    <div className="col-md-4">
+                      <p className="mb-1"><strong>งบประมาณตาม พ.ร.บ.:</strong></p>
+                      <p>{formatCurrency(project.budget)}</p>
+                    </div>
+                    <div className="col-md-4">
+                      <p className="mb-1"><strong>วันที่ถ่ายโอน:</strong></p>
+                      <p>{project.transferDate ? formatDate(project.transferDate) : 'ไม่ระบุ'}</p>
+                    </div>
+                    <div className="col-md-4">
+                      <p className="mb-1"><strong>หน่วยงานรับโอน:</strong></p>
+                      <p>{project.transferTo || 'ไม่ระบุ'}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* ส่วนที่ 3: เอกสารแนบโครงการ */}
+              <div className="card mb-3">
+                <div className="card-header bg-light">
+                  <h6 className="mb-0">เอกสารแนบโครงการ</h6>
+                </div>
+                <div className="card-body">
+                  {project.files && project.files.length > 0 ? (
+                    <div className="list-group">
+                      {project.files.map((file, index) => (
+                        <div key={index} className="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                          <div>
+                            <i className="bi bi-file-earmark me-2"></i>
+                            {file.name}
+                          </div>
+                          {file.url && (
+                            <a href={file.url} target="_blank" rel="noopener noreferrer" className="btn btn-sm btn-outline-primary">
+                              เปิดไฟล์
+                            </a>
+                          )}
                         </div>
-                        {file.url && (
-                          <a href={file.url} target="_blank" rel="noopener noreferrer" className="btn btn-sm btn-outline-primary">
-                            เปิดไฟล์
-                          </a>
-                        )}
-                      </li>
-                    ))}
-                  </ul>
-                </>
-              )}
-              
-              <div className="mt-3">
-                {(() => {
-                  try {
-                    // ตรวจสอบรูปแบบของ createdAt และแปลงให้ถูกต้อง
-                    let createdDate = null;
-                    if (project.createdAt) {
-                      if (project.createdAt.toDate) {
-                        // กรณีเป็น Firestore Timestamp
-                        createdDate = project.createdAt.toDate();
-                      } else if (typeof project.createdAt === 'string') {
-                        // กรณีเป็น string
-                        createdDate = new Date(project.createdAt);
-                      } else if (project.createdAt instanceof Date) {
-                        // กรณีเป็น Date object
-                        createdDate = project.createdAt;
-                      }
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-muted mb-0">ไม่มีเอกสารแนบ</p>
+                  )}
+                </div>
+              </div>
+
+              {/* ส่วนที่ 4: ข้อมูลการแก้ไข */}
+              <div className="card">
+                <div className="card-header bg-light">
+                  <h6 className="mb-0">ข้อมูลการแก้ไข</h6>
+                </div>
+                <div className="card-body">
+                  {(() => {
+                    try {
+                      let createdDate = project.createdAt?.toDate?.() || new Date(project.createdAt);
+                      let updatedDate = project.updatedAt?.toDate?.() || new Date(project.updatedAt);
+                      
+                      return (
+                        <div className="row">
+                          {createdDate && (
+                            <div className="col-md-6">
+                              <p className="mb-1"><strong>วันที่สร้าง:</strong></p>
+                              <p>{createdDate.toLocaleDateString('th-TH')}</p>
+                            </div>
+                          )}
+                          {updatedDate && (
+                            <div className="col-md-6">
+                              <p className="mb-1"><strong>แก้ไขล่าสุด:</strong></p>
+                              <p>{updatedDate.toLocaleDateString('th-TH')}</p>
+                            </div>
+                          )}
+                          {editorInfo && project.updatedBy && (
+                            <div className="col-12">
+                              <p className="mb-1"><strong>แก้ไขโดย:</strong></p>
+                              <p>{editorInfo.firstName} {editorInfo.lastName}</p>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    } catch (error) {
+                      console.error("Error formatting dates:", error);
+                      return <p className="text-danger">ไม่สามารถแสดงข้อมูลวันที่ได้</p>;
                     }
-                    
-                    // ตรวจสอบรูปแบบของ updatedAt และแปลงให้ถูกต้อง
-                    let updatedDate = null;
-                    if (project.updatedAt) {
-                      if (project.updatedAt.toDate) {
-                        // กรณีเป็น Firestore Timestamp
-                        updatedDate = project.updatedAt.toDate();
-                      } else if (typeof project.updatedAt === 'string') {
-                        // กรณีเป็น string
-                        updatedDate = new Date(project.updatedAt);
-                      } else if (project.updatedAt instanceof Date) {
-                        // กรณีเป็น Date object
-                        updatedDate = project.updatedAt;
-                      }
-                    }
-                    
-                    return (
-                      <>
-                        {createdDate && <p><strong>วันที่สร้าง:</strong> {createdDate.toLocaleDateString('th-TH')}</p>}
-                        {updatedDate && <p><strong>แก้ไขล่าสุด:</strong> {updatedDate.toLocaleDateString('th-TH')}</p>}
-                        {editorInfo && project.updatedBy && (
-                          <p><strong>แก้ไขโดย:</strong> {editorInfo ? `${editorInfo.firstName} ${editorInfo.lastName}` : 'ไม่ระบุชื่อผู้แก้ไข'}</p>
-                        )}
-                      </>
-                    );
-                  } catch (error) {
-                    console.error("Error formatting dates:", error);
-                    return <p className="text-danger">ไม่สามารถแสดงข้อมูลวันที่ได้</p>;
-                  }
-                })()}
+                  })()}
+                </div>
               </div>
             </div>
           </div>
