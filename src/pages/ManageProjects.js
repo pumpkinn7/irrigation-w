@@ -5,6 +5,7 @@ import { getFirestore, collection, getDocs, deleteDoc, doc, getDoc } from 'fireb
 import { getStorage, ref, deleteObject, listAll } from 'firebase/storage';
 import app from '../firebase';
 import { generateYearRange, getCurrentYear } from '../utils/yearUtils';
+import { departments } from '../utils/constants';
 import MapOverview from '../components/MapOverview';
 
 function ManageProjects() {
@@ -12,7 +13,9 @@ function ManageProjects() {
   const navigate = useNavigate();
   const [projects, setProjects] = useState([]);
   const [selectedYear, setSelectedYear] = useState(getCurrentYear());
+  const [selectedDepartment, setSelectedDepartment] = useState('');
   const years = generateYearRange();
+  
   const db = getFirestore(app);
   
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -32,6 +35,7 @@ function ManageProjects() {
       return;
     }
     
+    setSelectedDepartment(''); // รีเซ็ตหน่วยงานที่เลือกเมื่อเปลี่ยนปี
     const fetchProjects = async () => {
       setLoading(true);
       try {
@@ -155,6 +159,11 @@ function ManageProjects() {
     }
   };
 
+  // กรองโครงการตามหน่วยงานที่เลือก
+  const filteredProjects = selectedDepartment
+    ? projects.filter(project => project.department === selectedDepartment)
+    : [];
+
   return (
     <div className="container mt-5 pt-5 pb-4">
       <div className="row justify-content-center g-3">
@@ -164,22 +173,44 @@ function ManageProjects() {
             <div className="card-body d-flex flex-column">
               <div className="d-flex justify-content-between align-items-center mb-3">
                 <h2>จัดการโครงการ</h2>
-                <Link to="/manage-projects/create" className="btn btn-primary">
+                <Link 
+                  to={`/manage-projects/create?year=${selectedYear}${selectedDepartment ? `&department=${encodeURIComponent(selectedDepartment)}` : ''}`} 
+                  className="btn btn-primary"
+                >
                   เพิ่มโครงการ
                 </Link>
               </div>
 
-              <div className="mb-3">
-                <label className="form-label">ปีงบประมาณ</label>
-                <select 
-                  className="form-select"
-                  value={selectedYear}
-                  onChange={(e) => setSelectedYear(e.target.value)}
-                >
-                  {years.map(year => (
-                    <option key={year} value={year}>{year}</option>
-                  ))}
-                </select>
+              <div className="row g-3 mb-3">
+                <div className="col-md-6">
+                  <label className="form-label">ปีงบประมาณ</label>
+                  <select 
+                    className="form-select"
+                    value={selectedYear}
+                    onChange={(e) => {
+                      setSelectedYear(e.target.value);
+                      setSelectedDepartment(''); // รีเซ็ตหน่วยงานเมื่อเปลี่ยนปี
+                    }}
+                  >
+                    {years.map(year => (
+                      <option key={year} value={year}>{year}</option>
+                    ))}
+                  </select>
+                </div>
+                
+                <div className="col-md-6">
+                  <label className="form-label">หน่วยงานดำเนินการ</label>
+                  <select
+                    className="form-select"
+                    value={selectedDepartment}
+                    onChange={(e) => setSelectedDepartment(e.target.value)}
+                  >
+                    <option value="">เลือกหน่วยงาน</option>
+                    {departments.map(dept => (
+                      <option key={dept} value={dept}>{dept}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
               {loading ? (
@@ -188,63 +219,69 @@ function ManageProjects() {
                     <span className="visually-hidden">กำลังโหลด...</span>
                   </div>
                 </div>
-              ) : projects.length > 0 ? (
-                <div className="table-responsive flex-grow-1" style={{ 
-                  height: "280px", 
-                  maxHeight: "280px", 
-                  overflowY: 'auto',
-                  marginBottom: "10px"
-                }}>
-                  <table className="table table-hover table-striped mb-0">
-                    <thead className="table-light sticky-top" style={{ position: 'sticky', top: 0, zIndex: 1 }}>
-                      <tr>
-                        <th scope="col" width="70%">ชื่อโครงการ</th>
-                        <th scope="col" width="30%" className="text-center">การจัดการ</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {projects.map(project => (
-                        <tr 
-                          key={project.id}
-                          className={selectedProject?.id === project.id ? 'table-info' : ''}
-                          onClick={() => handleProjectClick(project)}
-                          style={{ cursor: 'pointer' }}
-                        >
-                          <td>{project.name}</td>
-                          <td>
-                            <div className="d-flex justify-content-center gap-1">
-                              <button
-                                className="btn btn-sm btn-outline-info"
-                                onClick={(e) => handleShowDetail(project, e)}
-                              >
-                                ข้อมูล
-                              </button>
-                              <Link 
-                                to={`/manage-projects/edit/${project.id}?year=${selectedYear}`} 
-                                className="btn btn-sm btn-outline-warning"
-                                onClick={(e) => e.stopPropagation()}
-                              >
-                                แก้ไข
-                              </Link>
-                              <button
-                                className="btn btn-sm btn-outline-danger"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  prepareDeleteProject(project);
-                                }}
-                              >
-                                ลบ
-                              </button>
-                            </div>
-                          </td>
+              ) : selectedDepartment ? (
+                filteredProjects.length > 0 ? (
+                  <div className="table-responsive flex-grow-1" style={{ 
+                    height: "280px", 
+                    maxHeight: "280px", 
+                    overflowY: 'auto',
+                    marginBottom: "10px"
+                  }}>
+                    <table className="table table-hover table-striped mb-0">
+                      <thead className="table-light sticky-top" style={{ position: 'sticky', top: 0, zIndex: 1 }}>
+                        <tr>
+                          <th scope="col" width="70%">ชื่อโครงการ</th>
+                          <th scope="col" width="30%" className="text-center">การจัดการ</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                      </thead>
+                      <tbody>
+                        {filteredProjects.map(project => (
+                          <tr 
+                            key={project.id}
+                            className={selectedProject?.id === project.id ? 'table-info' : ''}
+                            onClick={() => handleProjectClick(project)}
+                            style={{ cursor: 'pointer' }}
+                          >
+                            <td>{project.name}</td>
+                            <td>
+                              <div className="d-flex justify-content-center gap-1">
+                                <button
+                                  className="btn btn-sm btn-outline-info"
+                                  onClick={(e) => handleShowDetail(project, e)}
+                                >
+                                  ข้อมูล
+                                </button>
+                                <Link 
+                                  to={`/manage-projects/edit/${project.id}?year=${selectedYear}`} 
+                                  className="btn btn-sm btn-outline-warning"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  แก้ไข
+                                </Link>
+                                <button
+                                  className="btn btn-sm btn-outline-danger"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    prepareDeleteProject(project);
+                                  }}
+                                >
+                                  ลบ
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div className="alert alert-info">
+                    ไม่พบโครงการของ{selectedDepartment}ในปีงบประมาณ {selectedYear}
+                  </div>
+                )
               ) : (
                 <div className="alert alert-info">
-                  ไม่พบโครงการในปีงบประมาณ {selectedYear}
+                  กรุณาเลือกหน่วยงานดำเนินการ
                 </div>
               )}
             </div>
@@ -256,7 +293,7 @@ function ManageProjects() {
           <div className="card shadow-sm h-100">
             <div className="card-body p-0" style={{ height: "400px", minHeight: "400px" }}>
               <MapOverview 
-                projects={projects} 
+                projects={filteredProjects} 
                 selectedProject={selectedProject}
                 onMarkerClick={handleProjectClick}
               />

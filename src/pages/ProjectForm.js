@@ -7,12 +7,14 @@ import app from '../firebase';
 import MapPicker from '../components/MapPicker';
 import FileManager from '../components/FileManager';
 import { generateYearRange, getCurrentYear } from '../utils/yearUtils';
+import { departments } from '../utils/constants';
 
 function ProjectForm() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const yearFromParams = searchParams.get('year');
+  const departmentFromParams = searchParams.get('department');
   const { currentUser } = useAuth();
   const db = getFirestore(app);
   const [loading, setLoading] = useState(false);
@@ -23,7 +25,8 @@ function ProjectForm() {
   const [formData, setFormData] = useState({
     name: '',
     year: yearFromParams || getCurrentYear(),
-    location: {  // กำหนดค่าเริ่มต้น
+    department: departmentFromParams || '', // ใช้ค่า department จาก URL ถ้ามี
+    location: {
       lat: 16.4419,
       lng: 102.8360,
       address: ''
@@ -246,7 +249,7 @@ function ProjectForm() {
   }, []);
 
   return (
-    <div className="container mt-5 pt-5 pb-4">  {/* เปลี่ยนจาก mt-5 py-4 เป็น mt-5 pt-5 pb-4 */}
+    <div className="container mt-5 pt-5 pb-4">
       <div className="row justify-content-center">
         <div className="col-md-8">
           <div className="card shadow-sm mb-4">
@@ -303,6 +306,23 @@ function ProjectForm() {
                     disabled={loading}
                     required
                   />
+                </div>
+
+                <div className="mb-3">
+                  <label className="form-label">หน่วยงานดำเนินการ <span className="text-danger">*</span></label>
+                  <select
+                    className="form-select"
+                    name="department"
+                    value={formData.department}
+                    onChange={handleInputChange}
+                    disabled={loading}
+                    required
+                  >
+                    <option value="">เลือกหน่วยงาน</option>
+                    {departments.map(dept => (
+                      <option key={dept} value={dept}>{dept}</option>
+                    ))}
+                  </select>
                 </div>
 
                 <div className="mb-4">
