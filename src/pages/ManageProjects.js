@@ -162,7 +162,7 @@ function ManageProjects() {
   // กรองโครงการตามหน่วยงานที่เลือก
   const filteredProjects = selectedDepartment
     ? projects.filter(project => project.department === selectedDepartment)
-    : [];
+    : projects; // แสดงทั้งหมดถ้ายังไม่เลือกหน่วยงาน
 
   return (
     <div className="container mt-5 pt-5 pb-4">
@@ -219,7 +219,7 @@ function ManageProjects() {
                     <span className="visually-hidden">กำลังโหลด...</span>
                   </div>
                 </div>
-              ) : selectedDepartment ? (
+              ) : (
                 filteredProjects.length > 0 ? (
                   <div className="table-responsive flex-grow-1" style={{ 
                     height: "280px", 
@@ -230,7 +230,7 @@ function ManageProjects() {
                     <table className="table table-hover table-striped mb-0">
                       <thead className="table-light sticky-top" style={{ position: 'sticky', top: 0, zIndex: 1 }}>
                         <tr>
-                          <th scope="col" width="70%">ชื่อโครงการ</th>
+                          <th scope="col" width="70%">ชื่องาน</th>
                           <th scope="col" width="30%" className="text-center">การจัดการ</th>
                         </tr>
                       </thead>
@@ -276,13 +276,11 @@ function ManageProjects() {
                   </div>
                 ) : (
                   <div className="alert alert-info">
-                    ไม่พบโครงการของ{selectedDepartment}ในปีงบประมาณ {selectedYear}
+                    {selectedDepartment 
+                      ? `ไม่พบงานใน ${selectedDepartment} ของปีงบประมาณ ${selectedYear}`
+                      : `ไม่พบงานในปีงบประมาณ ${selectedYear}`}
                   </div>
                 )
-              ) : (
-                <div className="alert alert-info">
-                  กรุณาเลือกหน่วยงานดำเนินการ
-                </div>
               )}
             </div>
           </div>

@@ -139,6 +139,9 @@ function MapOverview({ projects, selectedProject, onMarkerClick }) {
                     <p className="mb-0 small text-muted">
                       พิกัด: {project.location.lat.toFixed(4)}, {project.location.lng.toFixed(4)}
                     </p>
+                    <p className="mb-0 small text-muted">
+                      แผนก: {project.department}
+                    </p>
                   </div>
                 </OverlayView>
               )}

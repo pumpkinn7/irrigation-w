@@ -25,12 +25,16 @@ function ProjectForm() {
   const [formData, setFormData] = useState({
     name: '',
     year: yearFromParams || getCurrentYear(),
-    department: departmentFromParams || '', // ใช้ค่า department จาก URL ถ้ามี
+    department: departmentFromParams || '',
     location: {
       lat: 16.4419,
       lng: 102.8360,
       address: ''
     },
+    // เพิ่มฟิลด์ใหม่
+    budget: '',
+    transferTo: '',
+    transferDate: '',
     files: []
   });
 
@@ -256,8 +260,8 @@ function ProjectForm() {
             <div className="card-header bg-white border-bottom">
               <h3 className="card-title mb-0">
                 {isEditMode 
-                  ? `แก้ไขโครงการชลประทาน ปี ${yearFromParams || formData.year}` 
-                  : 'เพิ่มโครงการชลประทาน'}
+                  ? `แก้ไขงานชลประทาน ปี ${yearFromParams || formData.year}` 
+                  : 'เพิ่มงานชลประทาน'}
               </h3>
             </div>
             
@@ -276,101 +280,165 @@ function ProjectForm() {
               )}
 
               <form onSubmit={handleSubmit}>
-                {/* แสดงปีงบประมาณเฉพาะเมื่อเป็นการสร้างโครงการใหม่เท่านั้น */}
-                {!isEditMode && (
-                  <div className="mb-3">
-                    <label className="form-label">ปีงบประมาณ <span className="text-danger">*</span></label>
-                    <select 
-                      className="form-select"
-                      name="year"
-                      value={formData.year}
-                      onChange={handleYearChange}
-                      disabled={loading}
-                      required
-                    >
-                      {years.map(year => (
-                        <option key={year} value={year}>{year}</option>
-                      ))}
-                    </select>
+                <div className="card mb-4">
+                  <div className="card-header bg-light">
+                    <h5 className="mb-0">ข้อมูลพื้นฐาน</h5>
                   </div>
-                )}
+                  <div className="card-body">
+                    {/* แสดงปีงบประมาณเฉพาะเมื่อเป็นการสร้างโครงการใหม่เท่านั้น */}
+                    {!isEditMode && (
+                      <div className="mb-3">
+                        <label className="form-label">ปีงบประมาณ <span className="text-danger">*</span></label>
+                        <select 
+                          className="form-select"
+                          name="year"
+                          value={formData.year}
+                          onChange={handleYearChange}
+                          disabled={loading}
+                          required
+                        >
+                          {years.map(year => (
+                            <option key={year} value={year}>{year}</option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
 
-                <div className="mb-3">
-                  <label className="form-label">ชื่อโครงการ <span className="text-danger">*</span></label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    disabled={loading}
-                    required
-                  />
-                </div>
-
-                <div className="mb-3">
-                  <label className="form-label">หน่วยงานดำเนินการ <span className="text-danger">*</span></label>
-                  <select
-                    className="form-select"
-                    name="department"
-                    value={formData.department}
-                    onChange={handleInputChange}
-                    disabled={loading}
-                    required
-                  >
-                    <option value="">เลือกหน่วยงาน</option>
-                    {departments.map(dept => (
-                      <option key={dept} value={dept}>{dept}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="mb-4">
-                  <label className="form-label">เลือกพิกัดบนแผนที่ <span className="text-danger">*</span></label>
-                  <MapPicker
-                    location={formData.location}
-                    onLocationChange={handleLocationChange}
-                  />
-                </div>
-
-                <div className="mb-3">
-                  <label className="form-label">ที่อยู่ตำแหน่ง</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    name="address"
-                    value={formData.location?.address || ''} // เพิ่ม optional chaining
-                    onChange={(e) => setFormData({
-                      ...formData,
-                      location: {
-                        ...(formData.location || {}), // ป้องกันกรณี location เป็น null
-                        address: e.target.value
-                      }
-                    })}
-                    disabled={loading}
-                    placeholder="ระบุรายละเอียดที่อยู่หรือตำแหน่ง (ถ้ามี)"
-                  />
-                </div>
-
-                {/* เอกสารแนบ */}
-                <div className="mb-4">
-                  <div className="card">
-                    <div className="card-header bg-light">
-                      <h5 className="mb-0">เอกสารแนบโครงการ</h5>
+                    <div className="mb-3">
+                      <label className="form-label">ชื่องาน <span className="text-danger">*</span></label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        name="name"
+                        value={formData.name}
+                        onChange={handleInputChange}
+                        disabled={loading}
+                        required
+                      />
                     </div>
-                    <div className="card-body">
-                      <FileManager 
-                        projectId={id}
-                        files={formData.files} 
-                        onFileChange={handleFileChange}
-                        year={formData.year}
-                        onDeleteFromStorage={handleDeleteFileFromStorage}
+
+                    <div className="mb-3">
+                      <label className="form-label">หน่วยงานดำเนินการ <span className="text-danger">*</span></label>
+                      <select
+                        className="form-select"
+                        name="department"
+                        value={formData.department}
+                        onChange={handleInputChange}
+                        disabled={loading}
+                        required
+                      >
+                        <option value="">เลือกหน่วยงาน</option>
+                        {departments.map(dept => (
+                          <option key={dept} value={dept}>{dept}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="card mb-4">
+                  <div className="card-header bg-light">
+                    <h5 className="mb-0">ข้อมูลงบประมาณและการถ่ายโอน</h5>
+                  </div>
+                  <div className="card-body">
+                    <div className="row">
+                      <div className="col-md-6">
+                        <div className="mb-3">
+                          <label className="form-label">งบประมาณตาม พ.ร.บ.</label>
+                          <div className="input-group">
+                            <input
+                              type="number"
+                              className="form-control"
+                              name="budget"
+                              value={formData.budget}
+                              onChange={handleInputChange}
+                              placeholder="ระบุงบประมาณ"
+                              min="0"
+                            />
+                            <span className="input-group-text">บาท</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="col-md-6">
+                        <div className="mb-3">
+                          <label className="form-label">วันที่ถ่ายโอน</label>
+                          <input
+                            type="date"
+                            className="form-control"
+                            name="transferDate"
+                            value={formData.transferDate}
+                            onChange={handleInputChange}
+                          />
+                        </div>
+                      </div>
+                      <div className="col-12">
+                        <div className="mb-3">
+                          <label className="form-label">หน่วยงานรับโอน</label>
+                          <input
+                            type="text"
+                            className="form-control"
+                            name="transferTo"
+                            value={formData.transferTo}
+                            onChange={handleInputChange}
+                            placeholder="ระบุหน่วยงานรับโอน"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="card mb-4">
+                  <div className="card-header bg-light">
+                    <h5 className="mb-0">ข้อมูลที่ตั้งโครงการ</h5>
+                  </div>
+                  <div className="card-body">
+                    <div className="mb-4">
+                      <label className="form-label">เลือกพิกัดบนแผนที่ <span className="text-danger">*</span></label>
+                      <MapPicker
+                        location={formData.location}
+                        onLocationChange={handleLocationChange}
+                      />
+                    </div>
+
+                    <div className="mb-3">
+                      <label className="form-label">ที่อยู่ตำแหน่ง</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        name="address"
+                        value={formData.location?.address || ''}
+                        onChange={(e) => setFormData({
+                          ...formData,
+                          location: {
+                            ...(formData.location || {}),
+                            address: e.target.value
+                          }
+                        })}
+                        disabled={loading}
+                        placeholder="ระบุรายละเอียดที่อยู่หรือตำแหน่ง (ถ้ามี)"
                       />
                     </div>
                   </div>
                 </div>
 
-                <div className="d-grid gap-2 mt-2">
+                {/* เอกสารแนบ */}
+                <div className="card mb-4">
+                  <div className="card-header bg-light">
+                    <h5 className="mb-0">เอกสารแนบโครงการ</h5>
+                  </div>
+                  <div className="card-body">
+                    <FileManager 
+                      projectId={id}
+                      files={formData.files} 
+                      onFileChange={handleFileChange}
+                      year={formData.year}
+                      onDeleteFromStorage={handleDeleteFileFromStorage}
+                    />
+                  </div>
+                </div>
+
+                <div className="d-grid gap-2">
                   <button
                     type="submit"
                     className="btn btn-primary py-2"
