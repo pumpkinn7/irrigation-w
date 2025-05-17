@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { getFirestore, collection, getDocs, doc, getDoc } from 'firebase/firestore';
+import { getFirestore, collection, getDocs } from 'firebase/firestore';
 import app from '../firebase';
 import { generateYearRange, getCurrentYear } from '../utils/yearUtils';
 import { departments } from '../utils/constants';
 import MapOverview from '../components/MapOverview';
+import ProjectDetailModal from '../components/ProjectDetailModal';
 
 function Home() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -17,7 +18,6 @@ function Home() {
   const [selectedProject, setSelectedProject] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [projectDetail, setProjectDetail] = useState(null);
-  const [editorInfo, setEditorInfo] = useState(null);
 
   // ใช้ useCallback เพื่อ memoize ฟังก์ชันและทำให้ dependency array สมบูรณ์
   const fetchProjects = useCallback(async () => {
@@ -70,23 +70,13 @@ function Home() {
   };
 
   // เพิ่มฟังก์ชันเปิด modal รายละเอียด
-  const handleShowDetail = async (project, e) => {
-    e.stopPropagation();
+  const handleShowDetail = (project, e) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     setProjectDetail(project);
     setShowDetailModal(true);
-    
-    if (project.updatedBy) {
-      try {
-        const userDoc = await getDoc(doc(db, 'users', project.updatedBy));
-        if (userDoc.exists()) {
-          setEditorInfo(userDoc.data());
-        }
-      } catch (error) {
-        console.error("Error fetching editor info:", error);
-      }
-    } else {
-      setEditorInfo(null);
-    }
   };
 
   return (
@@ -224,78 +214,13 @@ function Home() {
         </div>
       </div>
 
-      {/* Modal แสดงรายละเอียดโครงการ */}
-      {showDetailModal && projectDetail && (
-        <>
-          <div 
-            className="modal fade show" 
-            tabIndex="-1" 
-            role="dialog" 
-            aria-labelledby="detailModalLabel" 
-            aria-hidden="false" 
-            style={{ display: 'block' }}
-            onClick={() => setShowDetailModal(false)}
-          >
-            <div 
-              className="modal-dialog modal-dialog-centered" 
-              role="document"
-              onClick={e => e.stopPropagation()}
-            >
-              <div className="modal-content">
-                <div className="modal-header">
-                  <h5 className="modal-title" id="detailModalLabel">รายละเอียดงาน</h5>
-                  <button 
-                    type="button" 
-                    className="btn-close" 
-                    onClick={() => setShowDetailModal(false)}
-                    aria-label="Close"
-                  ></button>
-                </div>
-                <div className="modal-body">
-                  <h5 className="mb-3">{projectDetail.name}</h5>
-                  <p><strong>ปีงบประมาณ:</strong> {projectDetail.year || selectedYear}</p>
-                  <p><strong>หน่วยงานดำเนินการ:</strong> {projectDetail.department}</p>
-                  {projectDetail.location?.address && (
-                    <p><strong>ที่อยู่:</strong> {projectDetail.location.address}</p>
-                  )}
-                  
-                  {projectDetail.files && projectDetail.files.length > 0 && (
-                    <>
-                      <h6 className="mt-3 mb-2">เอกสารแนบ</h6>
-                      <ul className="list-group mb-3">
-                        {projectDetail.files.map((file, index) => (
-                          <li key={index} className="list-group-item d-flex justify-content-between align-items-center">
-                            <div>
-                              <i className="bi bi-file-earmark me-2"></i>
-                              {file.name}
-                            </div>
-                            {file.url && (
-                              <a href={file.url} target="_blank" rel="noopener noreferrer" className="btn btn-sm btn-outline-primary">
-                                เปิดไฟล์
-                              </a>
-                            )}
-                          </li>
-                        ))}
-                      </ul>
-                    </>
-                  )}
-                  
-                  <div className="mt-3">
-                    <p><strong>วันที่สร้าง:</strong> {new Date(projectDetail.createdAt).toLocaleDateString('th-TH')}</p>
-                    {projectDetail.updatedAt && (
-                      <p><strong>แก้ไขล่าสุด:</strong> {new Date(projectDetail.updatedAt).toLocaleDateString('th-TH')}</p>
-                    )}
-                    {projectDetail.updatedBy && (
-                      <p><strong>แก้ไขโดย:</strong> {editorInfo ? `${editorInfo.firstName} ${editorInfo.lastName}` : 'ไม่ระบุชื่อผู้แก้ไข'}</p>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="modal-backdrop fade show"></div>
-        </>
-      )}
+      {/* ใช้ ProjectDetailModal component แทน */}
+      <ProjectDetailModal 
+        project={projectDetail}
+        isOpen={showDetailModal}
+        onClose={() => setShowDetailModal(false)}
+        year={selectedYear}
+      />
     </div>
   );
 }

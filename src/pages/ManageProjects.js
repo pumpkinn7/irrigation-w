@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { getFirestore, collection, getDocs, deleteDoc, doc, getDoc } from 'firebase/firestore';
+import { getFirestore, collection, getDocs, deleteDoc, doc } from 'firebase/firestore';
 import { getStorage, ref, deleteObject, listAll } from 'firebase/storage';
 import app from '../firebase';
 import { generateYearRange, getCurrentYear } from '../utils/yearUtils';
 import { departments } from '../utils/constants';
 import MapOverview from '../components/MapOverview';
+import ProjectDetailModal from '../components/ProjectDetailModal';
 
 function ManageProjects() {
   const { currentUser } = useAuth();
@@ -27,7 +28,6 @@ function ManageProjects() {
   // เพิ่ม state สำหรับ modal รายละเอียด
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [projectDetail, setProjectDetail] = useState(null);
-  const [editorInfo, setEditorInfo] = useState(null);
   
   useEffect(() => {
     if (!currentUser) {
@@ -139,24 +139,13 @@ function ManageProjects() {
   };
 
   // ฟังก์ชันเปิด modal รายละเอียดและดึงข้อมูลผู้แก้ไข
-  const handleShowDetail = async (project, e) => {
-    e.stopPropagation(); // ป้องกันการ trigger event ของแถว
+  const handleShowDetail = (project, e) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     setProjectDetail(project);
     setShowDetailModal(true);
-    
-    // ดึงข้อมูลผู้แก้ไข
-    if (project.updatedBy) {
-      try {
-        const userDoc = await getDoc(doc(db, 'users', project.updatedBy));
-        if (userDoc.exists()) {
-          setEditorInfo(userDoc.data());
-        }
-      } catch (error) {
-        console.error("Error fetching editor info:", error);
-      }
-    } else {
-      setEditorInfo(null);
-    }
   };
 
   // กรองโครงการตามหน่วยงานที่เลือก
@@ -248,6 +237,7 @@ function ManageProjects() {
                                 <button
                                   className="btn btn-sm btn-outline-info"
                                   onClick={(e) => handleShowDetail(project, e)}
+                                  onMouseDown={(e) => e.stopPropagation()} // เพิ่มเพื่อป้องกันปัญหา event bubbling
                                 >
                                   ข้อมูล
                                 </button>
@@ -299,78 +289,6 @@ function ManageProjects() {
           </div>
         </div>
       </div>
-
-      {/* Modal แสดงรายละเอียดโครงการ */}
-      {showDetailModal && projectDetail && (
-        <>
-          <div 
-            className="modal fade show" 
-            tabIndex="-1" 
-            role="dialog" 
-            aria-labelledby="detailModalLabel" 
-            aria-hidden="false" 
-            style={{ display: 'block' }}
-            onClick={() => setShowDetailModal(false)}
-          >
-            <div 
-              className="modal-dialog modal-dialog-centered" 
-              role="document"
-              onClick={e => e.stopPropagation()}
-            >
-              <div className="modal-content">
-                <div className="modal-header">
-                  <h5 className="modal-title" id="detailModalLabel">รายละเอียดโครงการ</h5>
-                  <button 
-                    type="button" 
-                    className="btn-close" 
-                    onClick={() => setShowDetailModal(false)}
-                    aria-label="Close"
-                  ></button>
-                </div>
-                <div className="modal-body">
-                  <h5 className="mb-3">{projectDetail.name}</h5>
-                  <p><strong>ปีงบประมาณ:</strong> {projectDetail.year || selectedYear}</p>
-                  {projectDetail.location?.address && (
-                    <p><strong>ที่อยู่:</strong> {projectDetail.location.address}</p>
-                  )}
-                  
-                  {projectDetail.files && projectDetail.files.length > 0 && (
-                    <>
-                      <h6 className="mt-3 mb-2">เอกสารแนบ</h6>
-                      <ul className="list-group mb-3">
-                        {projectDetail.files.map((file, index) => (
-                          <li key={index} className="list-group-item d-flex justify-content-between align-items-center">
-                            <div>
-                              <i className="bi bi-file-earmark me-2"></i>
-                              {file.name}
-                            </div>
-                            {file.url && (
-                              <a href={file.url} target="_blank" rel="noopener noreferrer" className="btn btn-sm btn-outline-primary">
-                                เปิดไฟล์
-                              </a>
-                            )}
-                          </li>
-                        ))}
-                      </ul>
-                    </>
-                  )}
-                  
-                  <div className="mt-3">
-                    <p><strong>วันที่สร้าง:</strong> {new Date(projectDetail.createdAt).toLocaleDateString('th-TH')}</p>
-                    {projectDetail.updatedAt && (
-                      <p><strong>แก้ไขล่าสุด:</strong> {new Date(projectDetail.updatedAt).toLocaleDateString('th-TH')}</p>
-                    )}
-                    {projectDetail.updatedBy && (
-                      <p><strong>แก้ไขโดย:</strong> {editorInfo ? `${editorInfo.firstName} ${editorInfo.lastName}` : 'ไม่ระบุชื่อผู้แก้ไข'}</p>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="modal-backdrop fade show"></div>
-        </>
-      )}
 
       {/* Modal ยืนยันการลบ */}
       {showDeleteModal && (
@@ -433,6 +351,14 @@ function ManageProjects() {
           <div className="modal-backdrop fade show"></div>
         </>
       )}
+
+      {/* ใช้ ProjectDetailModal component แทน */}
+      <ProjectDetailModal 
+        project={projectDetail}
+        isOpen={showDetailModal}
+        onClose={() => setShowDetailModal(false)}
+        year={selectedYear}
+      />
     </div>
   );
 }
