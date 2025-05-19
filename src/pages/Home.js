@@ -159,8 +159,9 @@ function Home() {
                       <table className="table table-hover table-striped mb-0">
                         <thead className="table-light sticky-top" style={{ position: 'sticky', top: 0, zIndex: 1 }}>
                           <tr>
+                            <th scope="col" width="20%" className="text-center">ถ่ายโอนแล้ว</th>
                             <th scope="col" width="70%">ชื่องาน</th>
-                            <th scope="col" width="30%" className="text-center"></th>
+                            <th scope="col" width="10%" className="text-center"></th>
                           </tr>
                         </thead>
                         <tbody>
@@ -171,6 +172,17 @@ function Home() {
                               onClick={() => setSelectedProject(project)}
                               style={{ cursor: 'pointer' }}
                             >
+                              <td className="text-center">
+                                <span 
+                                  className="d-inline-block rounded-circle" 
+                                  style={{ 
+                                    width: '12px', 
+                                    height: '12px', 
+                                    backgroundColor: project.transferDate ? '#16C47F' : '#FF9D23' 
+                                  }}
+                                  title={project.transferDate ? 'ถ่ายโอนแล้ว' : 'ยังไม่ถ่ายโอน'}
+                                ></span>
+                              </td>
                               <td>{project.name}</td>
                               <td className="text-center">
                                 <button

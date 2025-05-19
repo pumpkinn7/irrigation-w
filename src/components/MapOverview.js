@@ -82,6 +82,26 @@ function MapOverview({ projects, selectedProject, onMarkerClick }) {
     setActiveMarker(null);
   };
 
+  // ฟังก์ชันสำหรับสร้าง custom marker SVG ตามสถานะการถ่ายโอน
+  const createCustomMarkerIcon = (project, isSelected) => {
+    // กำหนดสีตามสถานะการถ่ายโอน (เหมือนกับสีที่ใช้ในตาราง)
+    const color = project.transferDate ? '#16C47F' : '#FF9D23';
+    
+    // สร้าง SVG marker แบบ custom
+    const svgMarker = {
+      path: 'M12,2C8.13,2,5,5.13,5,9c0,5.25,7,13,7,13s7-7.75,7-13C19,5.13,15.87,2,12,2z M12,11.5c-1.38,0-2.5-1.12-2.5-2.5s1.12-2.5,2.5-2.5s2.5,1.12,2.5,2.5S13.38,11.5,12,11.5z',
+      fillColor: color,
+      fillOpacity: 1,
+      strokeWeight: isSelected ? 2 : 0,
+      strokeColor: '#FFFFFF',
+      rotation: 0,
+      scale: isSelected ? 2 : 1.6, // เพิ่มขนาดจาก 1.5/1.2 เป็น 2/1.6
+      anchor: new window.google.maps.Point(12, 22),
+    };
+    
+    return svgMarker;
+  };
+
   if (!isLoaded) return <div className="d-flex justify-content-center align-items-center" style={{ height: '100%' }}>
     <div className="spinner-border text-info" role="status">
       <span className="visually-hidden">กำลังโหลดแผนที่...</span>
@@ -101,6 +121,8 @@ function MapOverview({ projects, selectedProject, onMarkerClick }) {
         {projects.map((project) => {
           if (!project.location || typeof project.location.lat !== 'number') return null;
           
+          const isSelected = selectedProject?.id === project.id;
+          
           return (
             <React.Fragment key={project.id}>
               <Marker
@@ -109,12 +131,7 @@ function MapOverview({ projects, selectedProject, onMarkerClick }) {
                   lng: project.location.lng
                 }}
                 onClick={() => handleMarkerClick(project.id)}
-                icon={{
-                  url: selectedProject?.id === project.id ? 
-                    'http://maps.google.com/mapfiles/ms/icons/blue-dot.png' :
-                    'http://maps.google.com/mapfiles/ms/icons/red-dot.png',
-                  scaledSize: new window.google.maps.Size(40, 40)
-                }}
+                icon={createCustomMarkerIcon(project, isSelected)}
               />
               
               {/* แสดงกล่องข้อมูลเฉพาะเมื่อโครงการนี้ถูกเลือก */}
