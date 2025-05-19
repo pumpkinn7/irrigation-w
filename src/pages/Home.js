@@ -18,6 +18,8 @@ function Home() {
   const [selectedProject, setSelectedProject] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [projectDetail, setProjectDetail] = useState(null);
+  // เพิ่ม state สำหรับกรองสถานะการถ่ายโอน
+  const [transferStatus, setTransferStatus] = useState('all');
 
   // ใช้ useCallback เพื่อ memoize ฟังก์ชันและทำให้ dependency array สมบูรณ์
   const fetchProjects = useCallback(async () => {
@@ -54,7 +56,7 @@ function Home() {
     // ตัวกรองข้อมูลจะทำในการแสดงผลไม่ต้อง query ใหม่
   };
 
-  // ปรับปรุงการกรองข้อมูลให้รองรับทั้งชื่อโครงการและหน่วยงาน
+  // ปรับปรุงการกรองข้อมูลให้รองรับทั้งชื่อโครงการ, หน่วยงาน และสถานะการถ่ายโอน
   const filteredProjects = projects.filter(project => {
     // กรองตามการค้นหาชื่องาน
     const nameMatch = project.name?.toLowerCase().includes(searchTerm.toLowerCase());
@@ -62,7 +64,15 @@ function Home() {
     // กรองตามหน่วยงาน
     const departmentMatch = !selectedDepartment || project.department === selectedDepartment;
     
-    return nameMatch && departmentMatch;
+    // กรองตามสถานะการถ่ายโอน
+    let transferMatch = true;
+    if (transferStatus === 'transferred') {
+      transferMatch = Boolean(project.transferDate);
+    } else if (transferStatus === 'not-transferred') {
+      transferMatch = !project.transferDate;
+    }
+    
+    return nameMatch && departmentMatch && transferMatch;
   });
 
   const handleMarkerClick = (project) => {
@@ -88,18 +98,60 @@ function Home() {
             <div className="card-body d-flex flex-column">
               <h4 className="mb-3">งานชลประทานปี {selectedYear}</h4>
               
-              <form onSubmit={handleSearch} className="mb-3">
-                <div className="input-group">
-                  <input 
-                    type="text" 
-                    className="form-control" 
-                    placeholder="ค้นหางาน..." 
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
-                  <button className="btn btn-outline-info" type="submit">ค้นหา</button>
+              <div className="d-flex mb-3 gap-2">
+                <form onSubmit={handleSearch} className="flex-grow-1">
+                  <div className="input-group">
+                    <input 
+                      type="text" 
+                      className="form-control" 
+                      placeholder="ค้นหางาน..." 
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                    <button className="btn btn-outline-info" type="submit">ค้นหา</button>
+                  </div>
+                </form>
+                
+                {/* เพิ่มปุ่มไอคอน filter พร้อม dropdown menu */}
+                <div className="dropdown">
+                  <button 
+                    className="btn btn-outline-info dropdown-toggle"
+                    type="button"
+                    id="filterDropdown"
+                    data-bs-toggle="dropdown"
+                    aria-expanded="false"
+                    title="กรองสถานะการถ่ายโอน"
+                  >
+                    <i className="bi bi-funnel-fill"></i>
+                  </button>
+                  <ul className="dropdown-menu dropdown-menu-end" aria-labelledby="filterDropdown">
+                    <li>
+                      <button 
+                        className={`dropdown-item ${transferStatus === 'all' ? 'active' : ''}`} 
+                        onClick={() => setTransferStatus('all')}
+                      >
+                        ทั้งหมด
+                      </button>
+                    </li>
+                    <li>
+                      <button 
+                        className={`dropdown-item ${transferStatus === 'transferred' ? 'active' : ''}`}
+                        onClick={() => setTransferStatus('transferred')}
+                      >
+                        ถ่ายโอนแล้ว
+                      </button>
+                    </li>
+                    <li>
+                      <button 
+                        className={`dropdown-item ${transferStatus === 'not-transferred' ? 'active' : ''}`}
+                        onClick={() => setTransferStatus('not-transferred')}
+                      >
+                        ยังไม่ถ่ายโอน
+                      </button>
+                    </li>
+                  </ul>
                 </div>
-              </form>
+              </div>
 
               <div className="row g-3 mb-3">
                 <div className="col-md-6">
@@ -159,9 +211,9 @@ function Home() {
                       <table className="table table-hover table-striped mb-0">
                         <thead className="table-light sticky-top" style={{ position: 'sticky', top: 0, zIndex: 1 }}>
                           <tr>
-                            <th scope="col" width="20%" className="text-center">ถ่ายโอนแล้ว</th>
-                            <th scope="col" width="70%">ชื่องาน</th>
-                            <th scope="col" width="10%" className="text-center"></th>
+                            <th scope="col" style={{ width: '15%' }} className="text-center align-middle">ถ่ายโอน</th>
+                            <th scope="col" style={{ width: '75%' }} className="align-middle">ชื่องาน</th>
+                            <th scope="col" style={{ width: '10%' }} className="text-center align-middle"></th>
                           </tr>
                         </thead>
                         <tbody>
