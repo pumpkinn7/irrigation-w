@@ -1,0 +1,6 @@
+.navbar {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.10), 0 1.5px 4px rgba(0,0,0,0.08);
+  transition: box-shadow 0.2s;
+  background: #fff;
+  border-bottom: 1px solid #eaeaea;
+}

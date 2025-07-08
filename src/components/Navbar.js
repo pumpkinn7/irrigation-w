@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
 import { getAuth, signOut } from 'firebase/auth';
-import { getFirestore, getDoc, doc } from 'firebase/firestore';
+import { doc, getDoc, getFirestore } from 'firebase/firestore';
+import { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import app from '../firebase';
+import '../styles/Navbar.css'; 
 
 function Navbar() {
   const { currentUser } = useAuth();
@@ -59,7 +60,7 @@ function Navbar() {
           <img 
             src="/images/logo.png" 
             alt="กรมชลประทาน" 
-            height="65" 
+            height="60" 
             style={{ objectFit: 'contain' }}
           />
         </Link>

@@ -1,0 +1,39 @@
+.main-container {
+  padding-top: 80px;
+  min-height: 100vh;
+}
+
+.content-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 80px);
+}
+
+.content-inner {
+  width: 100%;
+  max-width: 1200px;
+  padding: 0 20px;
+}
+
+/* Responsive breakpoints */
+@media (max-width: 991.98px) {
+  .main-container {
+    padding-top: 90px;
+  }
+  
+  .content-wrapper {
+    align-items: flex-start;
+    padding-top: 20px;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .main-container {
+    padding-top: 100px;
+  }
+  
+  .content-inner {
+    padding: 0 15px;
+  }
+}

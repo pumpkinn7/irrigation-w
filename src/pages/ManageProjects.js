@@ -1,13 +1,14 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import { getFirestore, collection, getDocs, deleteDoc, doc } from 'firebase/firestore';
-import { getStorage, ref, deleteObject, listAll } from 'firebase/storage';
-import app from '../firebase';
-import { generateYearRange, getCurrentYear } from '../utils/yearUtils';
-import { departments } from '../utils/constants';
+import { collection, deleteDoc, doc, getDocs, getFirestore } from 'firebase/firestore';
+import { deleteObject, getStorage, listAll, ref } from 'firebase/storage';
+import { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import MapOverview from '../components/MapOverview';
 import ProjectDetailModal from '../components/ProjectDetailModal';
+import { useAuth } from '../contexts/AuthContext';
+import app from '../firebase';
+import '../styles/Layout.css';
+import { departments } from '../utils/constants';
+import { generateYearRange, getCurrentYear } from '../utils/yearUtils';
 
 function ManageProjects() {
   const { currentUser } = useAuth();
@@ -154,135 +155,139 @@ function ManageProjects() {
     : projects; // แสดงทั้งหมดถ้ายังไม่เลือกหน่วยงาน
 
   return (
-    <div className="container mt-5 pt-5 pb-4">
-      <div className="row justify-content-center g-3">
-        {/* ส่วนซ้าย - รายการโครงการ */}
-        <div className="col-lg-6 col-md-12">
-          <div className="card shadow-sm h-100">
-            <div className="card-body d-flex flex-column">
-              <div className="mb-3">
-                <div className="d-flex justify-content-between align-items-center">
-                  <h4 className="mb-0">
-                    จัดการโครงการ
-                  </h4>
-                  <Link 
-                    to={`/manage-projects/create?year=${selectedYear}${selectedDepartment ? `&department=${encodeURIComponent(selectedDepartment)}` : ''}`} 
-                    className="btn btn-primary"
-                  >
-                    เพิ่มโครงการ
-                  </Link>
-                </div>
-              </div>
-
-              <div className="row g-3 mb-3">
-                <div className="col-md-6">
-                  <label className="form-label">ปีงบประมาณ</label>
-                  <select 
-                    className="form-select"
-                    value={selectedYear}
-                    onChange={(e) => {
-                      setSelectedYear(e.target.value);
-                      setSelectedDepartment(''); // รีเซ็ตหน่วยงานเมื่อเปลี่ยนปี
-                    }}
-                  >
-                    {years.map(year => (
-                      <option key={year} value={year}>{year}</option>
-                    ))}
-                  </select>
-                </div>
-                
-                <div className="col-md-6">
-                  <label className="form-label">หน่วยงานดำเนินการ</label>
-                  <select
-                    className="form-select"
-                    value={selectedDepartment}
-                    onChange={(e) => setSelectedDepartment(e.target.value)}
-                  >
-                    <option value="">หน่วยงานทั้งหมด</option>
-                    {departments.map(dept => (
-                      <option key={dept} value={dept}>{dept}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              {loading ? (
-                <div className="text-center my-5">
-                  <div className="spinner-border text-info" role="status">
-                    <span className="visually-hidden">กำลังโหลด...</span>
+    <div className="main-container">
+      <div className="content-wrapper">
+        <div className="content-inner">
+          <div className="row g-4">
+            {/* ส่วนซ้าย - รายการโครงการ */}
+            <div className="col-lg-6 col-md-12 pb-2">
+              <div className="card shadow-sm h-100">
+                <div className="card-body d-flex flex-column">
+                  <div className="mb-3">
+                    <div className="d-flex justify-content-between align-items-center">
+                      <h4 className="mb-0">
+                        จัดการโครงการ
+                      </h4>
+                      <Link 
+                        to={`/manage-projects/create?year=${selectedYear}${selectedDepartment ? `&department=${encodeURIComponent(selectedDepartment)}` : ''}`} 
+                        className="btn btn-primary"
+                      >
+                        เพิ่มโครงการ
+                      </Link>
+                    </div>
                   </div>
-                </div>
-              ) : (
-                <div className="flex-grow-1" style={{ height: '375px' }}>
-                  {filteredProjects.length > 0 ? (
-                    <div className="table-responsive h-100">
-                      <table className="table table-striped mb-0">
-                        <thead className="table-light sticky-top" style={{ position: 'sticky', top: 0, zIndex: 1 }}>
-                          <tr>
-                            <th scope="col" width="70%">ชื่องาน</th>
-                            <th scope="col" width="30%" className="text-center">การจัดการ</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {filteredProjects.map(project => (
-                            <tr 
-                              key={project.id}
-                              onClick={() => handleProjectClick(project)}
-                              style={{ cursor: 'pointer' }}
-                            >
-                              <td>{project.name}</td>
-                              <td>
-                                <div className="d-flex justify-content-center gap-1">
-                                  <button
-                                    className="btn btn-sm btn-outline-info"
-                                    onClick={(e) => handleShowDetail(project, e)}
-                                    onMouseDown={(e) => e.stopPropagation()}
-                                  >
-                                    ข้อมูล
-                                  </button>
-                                  <Link 
-                                    to={`/manage-projects/edit/${project.id}?year=${selectedYear}`} 
-                                    className="btn btn-sm btn-outline-warning"
-                                    onClick={(e) => e.stopPropagation()}
-                                  >
-                                    แก้ไข
-                                  </Link>
-                                  <button
-                                    className="btn btn-sm btn-outline-danger"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      prepareDeleteProject(project);
-                                    }}
-                                  >
-                                    ลบ
-                                  </button>
-                                </div>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
+
+                  <div className="row g-3 mb-3">
+                    <div className="col-md-6">
+                      <label className="form-label">ปีงบประมาณ</label>
+                      <select 
+                        className="form-select"
+                        value={selectedYear}
+                        onChange={(e) => {
+                          setSelectedYear(e.target.value);
+                          setSelectedDepartment(''); // รีเซ็ตหน่วยงานเมื่อเปลี่ยนปี
+                        }}
+                      >
+                        {years.map(year => (
+                          <option key={year} value={year}>{year}</option>
+                        ))}
+                      </select>
+                    </div>
+                    
+                    <div className="col-md-6">
+                      <label className="form-label">หน่วยงานดำเนินการ</label>
+                      <select
+                        className="form-select"
+                        value={selectedDepartment}
+                        onChange={(e) => setSelectedDepartment(e.target.value)}
+                      >
+                        <option value="">หน่วยงานทั้งหมด</option>
+                        {departments.map(dept => (
+                          <option key={dept} value={dept}>{dept}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  {loading ? (
+                    <div className="text-center my-5">
+                      <div className="spinner-border text-info" role="status">
+                        <span className="visually-hidden">กำลังโหลด...</span>
+                      </div>
                     </div>
                   ) : (
-                    <div className="d-flex align-items-center justify-content-center h-100">
-                      <p className="text-muted">ไม่มีรายการงานที่แสดงในขณะนี้</p>
+                    <div className="flex-grow-1" style={{ height: '375px' }}>
+                      {filteredProjects.length > 0 ? (
+                        <div className="table-responsive h-100">
+                          <table className="table table-striped mb-0">
+                            <thead className="table-light sticky-top" style={{ position: 'sticky', top: 0, zIndex: 1 }}>
+                              <tr>
+                                <th scope="col" width="70%">ชื่องาน</th>
+                                <th scope="col" width="30%" className="text-center">การจัดการ</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {filteredProjects.map(project => (
+                                <tr 
+                                  key={project.id}
+                                  onClick={() => handleProjectClick(project)}
+                                  style={{ cursor: 'pointer' }}
+                                >
+                                  <td>{project.name}</td>
+                                  <td>
+                                    <div className="d-flex justify-content-center gap-1">
+                                      <button
+                                        className="btn btn-sm btn-outline-info"
+                                        onClick={(e) => handleShowDetail(project, e)}
+                                        onMouseDown={(e) => e.stopPropagation()}
+                                      >
+                                        ข้อมูล
+                                      </button>
+                                      <Link 
+                                        to={`/manage-projects/edit/${project.id}?year=${selectedYear}`} 
+                                        className="btn btn-sm btn-outline-warning"
+                                        onClick={(e) => e.stopPropagation()}
+                                      >
+                                        แก้ไข
+                                      </Link>
+                                      <button
+                                        className="btn btn-sm btn-outline-danger"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          prepareDeleteProject(project);
+                                        }}
+                                      >
+                                        ลบ
+                                      </button>
+                                    </div>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      ) : (
+                        <div className="d-flex align-items-center justify-content-center h-100">
+                          <p className="text-muted">ไม่มีรายการงานที่แสดงในขณะนี้</p>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
-              )}
+              </div>
             </div>
-          </div>
-        </div>
 
-        {/* ส่วนขวา - แผนที่ */}
-        <div className="col-lg-6 col-md-12">
-          <div className="card shadow-sm h-100">
-            <div className="card-body p-0" style={{ height: "400px", minHeight: "400px" }}>
-              <MapOverview 
-                projects={filteredProjects} 
-                selectedProject={selectedProject}
-                onMarkerClick={handleProjectClick}
-              />
+            {/* ส่วนขวา - แผนที่ */}
+            <div className="col-lg-6 col-md-12 pb-2">
+              <div className="card shadow-sm h-100">
+                <div className="card-body p-0" style={{ height: "400px", minHeight: "400px" }}>
+                  <MapOverview 
+                    projects={filteredProjects} 
+                    selectedProject={selectedProject}
+                    onMarkerClick={handleProjectClick}
+                  />
+                </div>
+              </div>
             </div>
           </div>
         </div>
