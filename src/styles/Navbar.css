@@ -1,6 +1,8 @@
 .navbar {
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.10), 0 1.5px 4px rgba(0,0,0,0.08);
-  transition: box-shadow 0.2s;
-  background: #fff;
-  border-bottom: 1px solid #eaeaea;
+  background: rgba(255, 255, 255, 0.25);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.10);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+  transition: box-shadow 0.2s, background 0.2s;
 }
