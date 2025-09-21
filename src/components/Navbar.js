@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import app from '../firebase';
-import '../styles/Navbar.css'; 
+import '../styles/Navbar.css';
 
 function Navbar() {
   const { currentUser } = useAuth();
@@ -56,13 +56,27 @@ function Navbar() {
   return (
     <nav className="navbar navbar-expand-lg navbar-light bg-light fixed-top">
       <div className="container">
-        <Link className="navbar-brand" to="/">
+        <Link className="navbar-brand d-flex align-items-center" to="/">
           <img 
             src="/images/logo.png" 
             alt="กรมชลประทาน" 
             height="60" 
             style={{ objectFit: 'contain' }}
           />
+          <div className="ms-2 ms-md-3 d-none d-sm-block">
+            <div className="fw-bold text-dark" style={{ 
+              fontSize: 'clamp(0.8rem, 2.5vw, 1.1rem)', 
+              lineHeight: '1.2' 
+            }}>
+              ระบบติดตามงานถ่ายโอนภารกิจ
+            </div>
+            <div className="text-muted" style={{ 
+              fontSize: 'clamp(0.7rem, 2vw, 0.85rem)', 
+              lineHeight: '1.2' 
+            }}>
+              ส่วนแผนงาน สำนักงานชลประทานที่ 6
+            </div>
+          </div>
         </Link>
         
         <button 
